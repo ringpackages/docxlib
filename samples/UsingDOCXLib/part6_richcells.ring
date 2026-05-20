@@ -45,7 +45,7 @@ tableData = [
     ],
     [
         wordCell("Supernova", [:bold = true, :color = "orange", :font = "Arial"]),
-        wordCell("A domain-specific visual programming language", [:italic = true]),
+        wordCell("A domain-specific programming language", [:italic = true]),
         wordCell("In Development", [:bold = true, :color = "orange", :align = "center"])
     ]
 ]
