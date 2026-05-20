@@ -2,7 +2,7 @@
     DOCXLib Demo - Part 1
 */
 
-load "../../libraries/docxlib/docxlib.ring"
+load "docxlib.ring"
 
 ? "=============================================="
 ? "   DOCXLib Demo - Word Creation in Ring"
