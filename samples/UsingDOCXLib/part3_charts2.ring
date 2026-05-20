@@ -3,8 +3,8 @@
     =======
 
     Demonstrates 
-      * addScatterChart()  — XY scatter (markers, lines+markers, lines only)
-      * addBubbleChart()   — Bubble (X/Y + size third dimension)
+      * addScatterChart()  - XY scatter (markers, lines+markers, lines only)
+      * addBubbleChart()   - Bubble (X/Y + size third dimension)
 
 */
 
@@ -18,11 +18,11 @@ load "docxlib.ring"
 outFile = "demo_charts2.docx"
 
 doc = new WordWriter()
-doc.setTitle("DOCXLib — Scatter & Bubble Chart Demo")
+doc.setTitle("DOCXLib - Scatter & Bubble Chart Demo")
 doc.setAuthor("Mahmoud")
 doc.setPageSize("a4")
 doc.setTheme("Blue")
-doc.setHeader("DOCXLib — Scatter & Bubble Charts")
+doc.setHeader("DOCXLib - Scatter & Bubble Charts")
 doc.showPageNumbers("right")
 doc.setMargins(2, 2, 2.2, 2.2)
 
@@ -30,14 +30,14 @@ doc.setMargins(2, 2, 2.2, 2.2)
 doc.addHeading("DOCXLib - Scatter & Bubble Charts", 1)
 doc.addParagraph(
     "Unlike column/line/pie charts, scatter and bubble charts have no string " +
-    "category axis — both axes are fully numeric. Series supply :xValues and " +
+    "category axis - both axes are fully numeric. Series supply :xValues and " +
     ":yValues lists instead of :values, and bubble series additionally supply " +
     "a :sizes list to control each bubble's area.", NULL)
 doc.addEmptyParagraph()
 
 doc.addTable([
-    ["addScatterChart()", "XY scatter — markers, lines+markers, or lines only"],
-    ["addBubbleChart()",  "Bubble — XY position plus a third numeric dimension as bubble size"]
+    ["addScatterChart()", "XY scatter - markers, lines+markers, or lines only"],
+    ["addBubbleChart()",  "Bubble - XY position plus a third numeric dimension as bubble size"]
 ], [
     :headerRow      = false,
     :evenRowBgColor = "EEF3FA",
@@ -47,9 +47,9 @@ doc.addTable([
 doc.addEmptyParagraph()
 
 # =============================================================================
-# CHART 1 — Markers-only scatter (default style)
+# CHART 1 - Markers-only scatter (default style)
 # =============================================================================
-doc.addHeading("1. Scatter Chart — Markers Only", 2)
+doc.addHeading("1. Scatter Chart - Markers Only", 2)
 doc.addParagraph(
     "The default scatter style shows only markers at each (X, Y) data point. " +
     "Three research groups are shown; each series has its own colour from the " +
@@ -57,7 +57,7 @@ doc.addParagraph(
 doc.addEmptyParagraph()
 
 doc.addScatterChart(
-    "Study Hours vs Exam Score — Three Cohorts",
+    "Study Hours vs Exam Score - Three Cohorts",
     [
         [:name = "Cohort A",
          :xValues = [2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -79,13 +79,13 @@ doc.addScatterChart(
         :xAxisTitle  = "Daily Study Hours",
         :yAxisTitle  = "Exam Score (%)"
     ])
-doc.addCaption("Figure 1 — Markers-only scatter, three cohorts, axis titles set")
+doc.addCaption("Figure 1 - Markers-only scatter, three cohorts, axis titles set")
 doc.addEmptyParagraph()
 
 # =============================================================================
-# CHART 2 — Lines + markers scatter
+# CHART 2 - Lines + markers scatter
 # =============================================================================
-doc.addHeading("2. Scatter Chart — Lines + Markers", 2)
+doc.addHeading("2. Scatter Chart - Lines + Markers", 2)
 doc.addParagraph(
     "Passing :lines = true connects data points with straight lines. " +
     "This variant is ideal for tracking paired measurements over time " +
@@ -93,7 +93,7 @@ doc.addParagraph(
 doc.addEmptyParagraph()
 
 doc.addScatterChart(
-    "Temperature vs Pressure — Two Sensors",
+    "Temperature vs Pressure - Two Sensors",
     [
         [:name = "Sensor A",
          :xValues = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
@@ -116,16 +116,16 @@ doc.addScatterChart(
         :xAxisTitle  = "Temperature (C)",
         :yAxisTitle  = "Pressure (kPa)"
     ])
-doc.addCaption("Figure 2 — Lines + markers scatter, two sensor series")
+doc.addCaption("Figure 2 - Lines + markers scatter, two sensor series")
 doc.addEmptyParagraph()
 
 # =============================================================================
-# CHART 3 — Smooth lines + markers scatter
+# CHART 3 - Smooth lines + markers scatter
 # =============================================================================
-doc.addHeading("3. Scatter Chart — Smooth Curves + Markers", 2)
+doc.addHeading("3. Scatter Chart - Smooth Curves + Markers", 2)
 doc.addParagraph(
     "Adding :smooth = true renders bezier curves instead of straight " +
-    "segments — useful for data that is expected to follow a continuous " +
+    "segments - useful for data that is expected to follow a continuous " +
     "function. Here two algorithm performance curves are compared.", NULL)
 doc.addEmptyParagraph()
 
@@ -153,16 +153,16 @@ doc.addScatterChart(
         :xAxisTitle  = "Input Size (n)",
         :yAxisTitle  = "Time (ms)"
     ])
-doc.addCaption("Figure 3 — Smooth lines + markers, algorithm complexity comparison")
+doc.addCaption("Figure 3 - Smooth lines + markers, algorithm complexity comparison")
 doc.addEmptyParagraph()
 
 # =============================================================================
-# CHART 4 — Lines-only scatter (no markers)
+# CHART 4 - Lines-only scatter (no markers)
 # =============================================================================
-doc.addHeading("4. Scatter Chart — Lines Only", 2)
+doc.addHeading("4. Scatter Chart - Lines Only", 2)
 doc.addParagraph(
     "Setting :markerStyle = 'none' with :lines = true gives a clean " +
-    "continuous line without point markers — suitable for dense datasets " +
+    "continuous line without point markers - suitable for dense datasets " +
     "where markers would clutter the chart.", NULL)
 doc.addEmptyParagraph()
 
@@ -192,13 +192,13 @@ doc.addScatterChart(
         :xAxisTitle  = "Degrees / 10",
         :yAxisTitle  = "Amplitude"
     ])
-doc.addCaption("Figure 4 — Lines-only scatter with 37 data points per series")
+doc.addCaption("Figure 4 - Lines-only scatter with 37 data points per series")
 doc.addEmptyParagraph()
 
 # =============================================================================
-# CHART 5 — Bubble chart (basic)
+# CHART 5 - Bubble chart (basic)
 # =============================================================================
-doc.addHeading("5. Bubble Chart — Market Analysis", 2)
+doc.addHeading("5. Bubble Chart - Market Analysis", 2)
 doc.addParagraph(
     "A bubble chart plots (X, Y) coordinates and encodes a third numeric " +
     "dimension as the bubble's area. Each bubble below represents a product: " +
@@ -215,7 +215,7 @@ aProducts = [
 ]
 
 doc.addBubbleChart(
-    "Product Portfolio — Market Share / Growth / Revenue",
+    "Product Portfolio - Market Share / Growth / Revenue",
     aProducts,
     [
         :widthCm     = 14,
@@ -226,13 +226,13 @@ doc.addBubbleChart(
         :yAxisTitle  = "YoY Growth (%)",
         :bubble3D    = false
     ])
-doc.addCaption("Figure 5 — Bubble chart: X=market share, Y=growth, size=revenue ($M)")
+doc.addCaption("Figure 5 - Bubble chart: X=market share, Y=growth, size=revenue ($M)")
 doc.addEmptyParagraph()
 
 # =============================================================================
-# CHART 6 — Bubble chart with 3-D shading
+# CHART 6 - Bubble chart with 3-D shading
 # =============================================================================
-doc.addHeading("6. Bubble Chart — Research Metrics (3-D shading)", 2)
+doc.addHeading("6. Bubble Chart - Research Metrics (3-D shading)", 2)
 doc.addParagraph(
     "Setting :bubble3D = true renders each bubble with a specular highlight, " +
     "giving a glossy sphere appearance. The data shows research projects: " +
@@ -253,7 +253,7 @@ aProjects = [
 ]
 
 doc.addBubbleChart(
-    "Research Projects — Team / Duration / Impact",
+    "Research Projects - Team / Duration / Impact",
     aProjects,
     [
         :widthCm     = 14,
@@ -265,7 +265,7 @@ doc.addBubbleChart(
         :bubble3D    = true,
         :showDataLabels = true
     ])
-doc.addCaption("Figure 6 — Bubble chart with 3-D shading and bubble-size labels")
+doc.addCaption("Figure 6 - Bubble chart with 3-D shading and bubble-size labels")
 doc.addEmptyParagraph()
 
 # =============================================================================
@@ -318,12 +318,12 @@ if doc.save(outFile)
     ? "Saved: " + outFile
     ? ""
     ? "Charts included:"
-    ? "  1. Scatter — markers only          (3 cohorts, custom axis labels)"
-    ? "  2. Scatter — lines + markers       (2 sensors, straight lines)"
-    ? "  3. Scatter — smooth lines + markers(2 algorithms, bezier curves)"
-    ? "  4. Scatter — lines only            (sine/cosine, 37 points each)"
-    ? "  5. Bubble  — basic                 (5 products, flat shading)"
-    ? "  6. Bubble  — 3-D shading           (2 projects, glossy bubbles)"
+    ? "  1. Scatter - markers only          (3 cohorts, custom axis labels)"
+    ? "  2. Scatter - lines + markers       (2 sensors, straight lines)"
+    ? "  3. Scatter - smooth lines + markers(2 algorithms, bezier curves)"
+    ? "  4. Scatter - lines only            (sine/cosine, 37 points each)"
+    ? "  5. Bubble  - basic                 (5 products, flat shading)"
+    ? "  6. Bubble  - 3-D shading           (2 projects, glossy bubbles)"
 else
     ? "Error: save() failed."
 ok
