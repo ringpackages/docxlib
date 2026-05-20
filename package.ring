@@ -42,7 +42,7 @@ aPackageInfo = [
 		"samples/UsingDOCXLib/images/test_cell_image2.bmp",
 		"samples/UsingDOCXLib/images/wr3d_test_img.bmp",
 		"samples/UsingDOCXLib/part2_charts.ring",
-		"samples/UsingDOCXLib/part2_charts2.ring"
+		"samples/UsingDOCXLib/part2_charts2.ring",
 		"samples/UsingDOCXLib/part3_shapes.ring"
 	],
 	:windowsfiles = 	[
