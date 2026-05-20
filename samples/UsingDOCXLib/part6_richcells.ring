@@ -766,26 +766,26 @@ proj3Name.addRun("Language interop layer", [:size = 9, :color = "gray"])
 proj3Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "FF9800", :align = "center"])
 
 proj4Name = new WordCell()
-proj4Name.addRun("Archive Package", [:bold = true, :size = 12])
+proj4Name.addRun("Closures", [:bold = true, :size = 12])
 proj4Name.addLineBreak()
-proj4Name.addRun("Compression library", [:size = 9, :color = "gray"])
+proj4Name.addRun("Language core feature", [:size = 9, :color = "gray"])
 
-proj4Status = wordCell("At Risk", [:bold = true, :color = "white", :bgColor = "F44336", :align = "center"])
+proj4Status = wordCell("Complete", [:bold = true, :color = "white", :bgColor = "2196F3", :align = "center"])
 
 proj5Name = new WordCell()
-proj5Name.addRun("Closures", [:bold = true, :size = 12])
+proj5Name.addRun("Archive Package", [:bold = true, :size = 12])
 proj5Name.addLineBreak()
-proj5Name.addRun("Language core feature", [:size = 9, :color = "gray"])
+proj5Name.addRun("Compression library", [:size = 9, :color = "gray"])
 
-proj5Status = wordCell("Complete", [:bold = true, :color = "white", :bgColor = "2196F3", :align = "center"])
+proj5Status = wordCell("At Risk", [:bold = true, :color = "white", :bgColor = "F44336", :align = "center"])
 
 tableData = [
     [hProject, hLead, hProg, hStatus],
     [proj1Name, "Mahmoud", wordCell("65%", [:align = "center", :bold = true]), proj1Status],
     [proj2Name, "Youssef", wordCell("70%", [:align = "center", :bold = true]), proj2Status],
     [proj3Name, "Youssef", wordCell("85%", [:align = "center", :bold = true]), proj3Status],
-    [proj4Name, "Youssef", wordCell("90%", [:align = "center", :bold = true]), proj4Status],
-    [proj5Name, "Mahmoud", wordCell("20%", [:align = "center", :bold = true, :color = "green"]), proj5Status]
+    [proj4Name, "Mahmoud", wordCell("20%", [:align = "center", :bold = true]), proj4Status],
+    [proj5Name, "Youssef", wordCell("100%", [:align = "center", :bold = true, :color = "green"]), proj5Status]
 ]
 
 doc.addTable(tableData, [
@@ -828,10 +828,6 @@ features = [
     ["Object-Oriented", checkMark, checkMark, checkMark],
     ["Functional Style", checkMark, checkMark, checkMark],
     ["PWCT2", checkMark, crossMark, crossMark],
-    ["Declarative UI", checkMark, crossMark, crossMark],
-    ["Microcontroller", checkMark, crossMark, checkMark],
-    ["Garbage Collection", checkMark, checkMark, checkMark],
-    ["Natural Language Coding", checkMark, crossMark, crossMark]
 ]
 
 tableData = [[hFeature, hRing, hPython, hJava]]
