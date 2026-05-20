@@ -1,5 +1,5 @@
 /*
-    DOCXLib Demo - Part 1
+	DOCXLib - Demo (Intro)
 */
 
 load "docxlib.ring"

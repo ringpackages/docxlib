@@ -1,11 +1,5 @@
 /*
-    DOCXLIB
-    =======
-
-    Demonstrates 
-      * addScatterChart()  - XY scatter (markers, lines+markers, lines only)
-      * addBubbleChart()   - Bubble (X/Y + size third dimension)
-
+	DOCXLib - Demo (Charts2)
 */
 
 load "docxlib.ring"
