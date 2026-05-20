@@ -58,7 +58,7 @@ required.
 
 | Category | Capability |
 |---|---|
-| Zero dependencies | Pure Ring — no Python, Java, COM, or Office needed |
+| Zero dependencies | Pure Ring |
 | Fluent API | Every method returns `self`, enabling method chaining |
 | OOXML compliant | Files open without repair warnings in Word 2016–365 |
 | Rich tables | Cell merging, per-side borders, row heights, text direction, images, lists inside cells |
@@ -1534,7 +1534,7 @@ doc.addParagraph("", NULL)
 # Table + caption
 doc.addTableCaption("Raw timing data in milliseconds")
 doc.addTable([
-    ["Test Case",  "Ring", "Python", "Node.js"],
+    ["Test Case",  "Ring", "Lang2", "Lang3"],
     ["Fibonacci",  "42",   "180",    "95"     ],
     ["Sort 10k",   "18",   "72",     "38"     ],
     ["File I/O",   "55",   "140",    "60"     ]
