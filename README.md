@@ -57,7 +57,7 @@
 
 DOCXLib is a **pure-Ring** library for generating and reading Microsoft Word (`.docx`)
 documents programmatically — no external tools, no COM automation, no Office installation
-required. The library consists of two files:
+required. 
 
 ### 1.1 Key Features
 
