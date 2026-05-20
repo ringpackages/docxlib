@@ -749,7 +749,7 @@ proj1Name.addRun("Ring 1.26", [:bold = true, :size = 12])
 proj1Name.addLineBreak()
 proj1Name.addRun("New language features", [:size = 9, :color = "gray"])
 
-proj1Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "4CAF50", :align = "center"])
+proj1Status = wordCell("Delayed", [:bold = true, :color = "white", :bgColor = "4CAF50", :align = "center"])
 
 proj2Name = new WordCell()
 proj2Name.addRun("RingSlint UI", [:bold = true, :size = 12])
@@ -763,14 +763,14 @@ proj3Name.addRun("Rust Bindings", [:bold = true, :size = 12])
 proj3Name.addLineBreak()
 proj3Name.addRun("Language interop layer", [:size = 9, :color = "gray"])
 
-proj3Status = wordCell("At Risk", [:bold = true, :color = "white", :bgColor = "FF9800", :align = "center"])
+proj3Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "FF9800", :align = "center"])
 
 proj4Name = new WordCell()
 proj4Name.addRun("Archive Package", [:bold = true, :size = 12])
 proj4Name.addLineBreak()
 proj4Name.addRun("Compression library", [:size = 9, :color = "gray"])
 
-proj4Status = wordCell("Delayed", [:bold = true, :color = "white", :bgColor = "F44336", :align = "center"])
+proj4Status = wordCell("At Risk", [:bold = true, :color = "white", :bgColor = "F44336", :align = "center"])
 
 proj5Name = new WordCell()
 proj5Name.addRun("Closures", [:bold = true, :size = 12])
@@ -781,11 +781,11 @@ proj5Status = wordCell("Complete", [:bold = true, :color = "white", :bgColor = "
 
 tableData = [
     [hProject, hLead, hProg, hStatus],
-    [proj1Name, "Mahmoud", wordCell("85%", [:align = "center", :bold = true]), proj1Status],
-    [proj2Name, "Ahmed", wordCell("70%", [:align = "center", :bold = true]), proj2Status],
-    [proj3Name, "Sara", wordCell("45%", [:align = "center", :bold = true]), proj3Status],
-    [proj4Name, "Omar", wordCell("20%", [:align = "center", :bold = true]), proj4Status],
-    [proj5Name, "Mahmoud", wordCell("100%", [:align = "center", :bold = true, :color = "green"]), proj5Status]
+    [proj1Name, "Mahmoud", wordCell("65%", [:align = "center", :bold = true]), proj1Status],
+    [proj2Name, "Youssef", wordCell("70%", [:align = "center", :bold = true]), proj2Status],
+    [proj3Name, "Youssef", wordCell("85%", [:align = "center", :bold = true]), proj3Status],
+    [proj4Name, "Youssef", wordCell("90%", [:align = "center", :bold = true]), proj4Status],
+    [proj5Name, "Mahmoud", wordCell("20%", [:align = "center", :bold = true, :color = "green"]), proj5Status]
 ]
 
 doc.addTable(tableData, [
@@ -819,7 +819,7 @@ crossMark = "NO"
 # Headers
 hFeature = wordCell("Feature", [:bold = true, :color = "white", :align = "center"])
 hRing    = wordCell("Ring", [:bold = true, :color = "white", :align = "center"])
-hPython  = wordCell("Python", [:bold = true, :color = "white", :align = "center"])
+hPython  = wordCell("CPython", [:bold = true, :color = "white", :align = "center"])
 hJava    = wordCell("Java", [:bold = true, :color = "white", :align = "center"])
 
 # Feature rows
@@ -829,7 +829,7 @@ features = [
     ["Functional Style", checkMark, checkMark, checkMark],
     ["PWCT2", checkMark, crossMark, crossMark],
     ["Declarative UI", checkMark, crossMark, crossMark],
-    ["Embedded C Support", checkMark, crossMark, checkMark],
+    ["Microcontroller", checkMark, crossMark, checkMark],
     ["Garbage Collection", checkMark, checkMark, checkMark],
     ["Natural Language Coding", checkMark, crossMark, crossMark]
 ]
