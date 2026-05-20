@@ -1,5 +1,5 @@
 /*
-    RingWordReader - Read and round-trip DOCX files
+    DOCXLib  
 */
 
 # ============================================================================
