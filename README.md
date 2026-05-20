@@ -258,7 +258,7 @@ doc.setHeader("Chapter 1 — Introduction")
 # Book-style even/odd headers
 doc.setEvenAndOddHeaders(true)
 doc.setHeader("Ring Language Study")           # odd pages (right side)
-doc.setEvenPageHeader("Mahmoud Fayed, 2026")   # even pages (left side)
+doc.setEvenPageHeader("Mahmoud, 2026")   # even pages (left side)
 ```
 
 ---
@@ -332,7 +332,7 @@ doc.addRichParagraph([
 # Character styles
 doc.addRichParagraph([
     ["See ",         []],
-    ["ring-lang.net", [:charStyle="Hyperlink"]]
+    ["ring-lang.github.io", [:charStyle="Hyperlink"]]
 ], [])
 ```
 
@@ -751,7 +751,7 @@ The `footnoteContent` / `endnoteContent` argument accepts **either**:
 # Plain-text footnote (backward-compatible)
 doc.addFootnote(
     "Ring is a multi-paradigm language.",
-    "Fayed, M. (2013). Ring Programming Language. ring-lang.net",
+    "Ring Programming Language. ring-lang.github.io",
     []
 )
 
@@ -760,10 +760,10 @@ doc.addFootnote(
     "See the official documentation.",
     [
         [" See: ",            []],
-        ["Mahmoud Fayed",     [:bold=true, :color="1B5E20"]],
+        ["Mahmoud",     [:bold=true, :color="1B5E20"]],
         [", Ring Language, ", []],
-        ["2013–present",      [:italic=true, :color="666666"]],
-        [". ring-lang.net",   []]
+        ["2016-2026",      [:italic=true, :color="666666"]],
+        [". ring-lang.github.io",   []]
     ],
     []
 )
@@ -791,8 +791,8 @@ doc.addEndnote(
 ### 11.1 Hyperlinks
 
 ```ring
-doc.addHyperlink("Ring Language Website", "http://ring-lang.net")
-doc.addHyperlink("Send Email", "mailto:info@ring-lang.net")
+doc.addHyperlink("Ring Language Website", "http://ring-lang.github.io")
+doc.addHyperlink("Send Email", "mailto:info@ring-lang.github.io")
 ```
 
 ### 11.2 Bookmarks
@@ -942,7 +942,7 @@ doc.disableLineNumbers()   # turn off for remaining paragraphs
 doc.addCommentedParagraph(
     "The Ring VM is stack-based and written in C.",
     "Please verify against the source",
-    [:commentAuthor = "Dr. Mahmoud",
+    [:commentAuthor = "Mahmoud",
      :commentDate   = "2026-03-15T09:00:00Z"]
 )
 
@@ -1496,7 +1496,7 @@ load "docxlib.ring"
 
 doc = new WordWriter()
 doc.setTitle("Ring Language Performance Study")
-doc.setAuthor("Mahmoud Fayed")
+doc.setAuthor("Mahmoud")
 doc.setPageSize("a4")
 doc.setTheme("Blue")
 
@@ -1520,7 +1520,7 @@ doc.addPageBreak()
 # Chapter 1
 doc.addHeading("1. Introduction", 1)
 doc.addParagraph("Ring is a multi-paradigm language designed for application development.", NULL)
-doc.addFootnote("See ring-lang.net", "Ring official website.", NULL)
+doc.addFootnote("See ring-lang.github.io", "Ring official website.", NULL)
 doc.addParagraph("", NULL)
 
 doc.addHeading("1.1 Methodology", 2)
@@ -1617,7 +1617,7 @@ doc.setMergeTemplate([
              "Your enrolment number is {{EnrolmentNumber}}."],
     [:type = "emptyline"],
     [:type = "paragraph", :text = "Yours sincerely,"],
-    [:type = "paragraph", :text = "Professor Mahmoud Fayed", :options = [:bold = true]]
+    [:type = "paragraph", :text = "Mahmoud", :options = [:bold = true]]
 ])
 
 recipients = [
