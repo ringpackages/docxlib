@@ -20,7 +20,7 @@ doc.setTheme("Blue")
 doc.setHeader("DOCXLib — Document Themes")
 doc.showPageNumbers("right")
 
-doc.addHeading("Feature 3 — Document Themes", 1)
+doc.addHeading("Document Themes", 1)
 doc.addParagraph("setTheme() applies a named colour palette to the document. Heading colours change automatically. A word/theme/theme1.xml file is written into the DOCX package.", NULL)
 doc.addParagraph("", NULL)
 
