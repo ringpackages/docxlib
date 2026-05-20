@@ -6,8 +6,6 @@
 
 ## Table of Contents
 
-**Writer**
-
 1. [Introduction](#1-introduction)
 2. [Document Setup](#2-document-setup)
 3. [Headers, Footers, and Page Numbers](#3-headers-footers-and-page-numbers)
@@ -33,18 +31,15 @@
 23. [Complete Example](#23-complete-example)
 24. [Mail Merge Template Engine](#24-mail-merge-template-engine)
 25. [Chart Data Tables](#25-chart-data-tables)
-
-**Reader**
-
-27. [Introduction to WordReader](#27-introduction-to-wordreader)
-28. [Loading and Saving](#28-loading-and-saving)
-29. [Document Properties](#29-document-properties)
-30. [Content Query Methods](#30-content-query-methods)
-31. [Table Query Methods](#31-table-query-methods)
-32. [Image Query Methods](#32-image-query-methods)
-33. [Section and Layout Queries](#33-section-and-layout-queries)
-34. [Round-Trip: toWriter()](#34-round-trip-towriter)
-35. [Reader Quick Reference](#35-reader-quick-reference)
+26. [Introduction to WordReader](#27-introduction-to-wordreader)
+27. [Loading and Saving](#28-loading-and-saving)
+28. [Document Properties](#29-document-properties)
+29. [Content Query Methods](#30-content-query-methods)
+30. [Table Query Methods](#31-table-query-methods)
+31. [Image Query Methods](#32-image-query-methods)
+32. [Section and Layout Queries](#33-section-and-layout-queries)
+33. [Round-Trip: toWriter()](#34-round-trip-towriter)
+34. [Reader Quick Reference](#35-reader-quick-reference)
 
 ---
 
@@ -1710,7 +1705,7 @@ doc.addLineChart("Trend", months, trendSeries, [:smooth = true])
 
 ---
 
-## 27. Introduction to WordReader
+## 26. Introduction to WordReader
 
 `WordReader` (`docxlib.ring`) parses any `.docx` file and provides:
 
@@ -1738,7 +1733,7 @@ reader.cleanup()
 
 ---
 
-## 28. Loading and Saving
+## 27. Loading and Saving
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -1753,7 +1748,7 @@ reader.cleanup()
 
 ---
 
-## 29. Document Properties
+## 28. Document Properties
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1798,9 +1793,9 @@ reader.cleanup()
 
 ---
 
-## 30. Content Query Methods
+## 29. Content Query Methods
 
-### 30.1 Summary and Block Listing
+### 29.1 Summary and Block Listing
 
 ```ring
 ? reader.summary()        # human-readable content overview
@@ -1808,7 +1803,7 @@ reader.listBlocks()       # numbered block list with type + preview
 blocks = reader.getBlocks()  # raw list of all parsed blocks
 ```
 
-### 30.2 Paragraphs and Runs
+### 29.2 Paragraphs and Runs
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1832,7 +1827,7 @@ blocks = reader.getBlocks()  # raw list of all parsed blocks
 | `getCharStyles()` | List | All character style names found in the document |
 | `getTextBoxes()` | List of `[:text]` | Floating text box content |
 
-### 30.3 Lists, Hyperlinks, Captions, Bookmarks
+### 29.3 Lists, Hyperlinks, Captions, Bookmarks
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1842,7 +1837,7 @@ blocks = reader.getBlocks()  # raw list of all parsed blocks
 | `getCaptions()` | List of `[:text, :label, :seqNum]` | SEQ figure/table captions |
 | `getBookmarks()` | List of `[:name, :text]` | Named bookmark anchors |
 
-### 30.4 Footnotes and Endnotes
+### 29.4 Footnotes and Endnotes
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1869,7 +1864,7 @@ for fn in footnotes
 next
 ```
 
-### 30.5 Comments, Fields, Charts
+### 29.5 Comments, Fields, Charts
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1880,7 +1875,7 @@ next
 | `getCharts()` | List of `[:type, :title, :widthCm, :heightCm]` | Embedded chart metadata |
 | `getChartData()` | List with full series data | Charts with categories and series values |
 
-### 30.6 Form Fields
+### 29.6 Form Fields
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1891,7 +1886,7 @@ next
 
 ---
 
-## 31. Table Query Methods
+## 30. Table Query Methods
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1935,7 +1930,7 @@ cell[:padTop/Bottom/Left/Right] — padding in twips
 
 ---
 
-## 32. Image Query Methods
+## 31. Image Query Methods
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1960,7 +1955,7 @@ block[:cropB]     — bottom crop in percent
 
 ---
 
-## 33. Section and Layout Queries
+## 32. Section and Layout Queries
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1988,7 +1983,7 @@ item[:columnSpaceCm] — column spacing in cm
 
 ---
 
-## 34. Round-Trip: `toWriter()`
+## 33. Round-Trip: `toWriter()`
 
 `toWriter()` rebuilds the entire parsed document as a `WordWriter` instance. You can
 then add new content, modify page settings, or just call `save()` to produce a clean
@@ -2034,7 +2029,7 @@ reader.cleanup()
 
 ---
 
-## 35. Reader Quick Reference
+## 34. Reader Quick Reference
 
 ```ring
 load "docxlib.ring"
