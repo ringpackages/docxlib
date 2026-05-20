@@ -30,10 +30,8 @@ doc.setMargins(2, 2, 2.2, 2.2)
 # -- Cover ---------------------------------------------------------------------
 doc.addHeading("DOCXLib — Native OOXML Chart Support", 1)
 doc.addParagraph(
-    "This document demonstrates native chart types" +
-    "Charts are stored as pure OOXML XML inside the DOCX package — no images, " +
-    "no Python, no external tools. Open the file in Word or LibreOffice to " +
-    "interact with the charts, change data, and adjust formatting.", NULL)
+    "This document demonstrates native chart types. " +
+    "Charts are stored as pure OOXML XML inside the DOCX package ", NULL)
 doc.addEmptyParagraph()
 
 doc.addTable([
