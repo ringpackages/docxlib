@@ -5,11 +5,11 @@ aPackageInfo = [
 	:developer = "Mahmoud Fayed",
 	:email = "msfclipper@yahoo.com",
 	:license = "MIT License",
-	:version = "1.0.2",
+	:version = "1.0.3",
 	:ringversion = "1.26",
 	:versions = 	[
 		[
-			:version = "1.0.2",
+			:version = "1.0.3",
 			:branch = "master"
 		]
 	],
@@ -34,7 +34,7 @@ aPackageInfo = [
 		"libraries/docxlib/lib/wordreader.ring",
 		"libraries/docxlib/lib/wordwriter.ring",
 		"libraries/docxlib/lib/wrfunctions.ring",
-		"samples/UsingDOCXLib/demo_part1.ring",
+		"samples/UsingDOCXLib/demo_intro.ring",
 		"samples/UsingDOCXLib/images/test1.png",
 		"samples/UsingDOCXLib/images/test2.jpg",
 		"samples/UsingDOCXLib/images/test3.bmp",
