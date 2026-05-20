@@ -251,7 +251,7 @@ doc.addParagraph("This uses the custom style.", [:style = "CalloutBox"])
 
 ```ring
 # Standard header with page numbers
-doc.setHeader("Annual Report 2025")
+doc.setHeader("Annual Report 2026")
 doc.showPageNumbers("right")
 
 # Cover page — no header, subsequent pages with header
@@ -262,7 +262,7 @@ doc.setHeader("Chapter 1 — Introduction")
 # Book-style even/odd headers
 doc.setEvenAndOddHeaders(true)
 doc.setHeader("Ring Language Study")           # odd pages (right side)
-doc.setEvenPageHeader("Mahmoud Fayed, 2025")   # even pages (left side)
+doc.setEvenPageHeader("Mahmoud Fayed, 2026")   # even pages (left side)
 ```
 
 ---
@@ -947,7 +947,7 @@ doc.addCommentedParagraph(
     "The Ring VM is stack-based and written in C.",
     "Please verify against the source",
     [:commentAuthor = "Dr. Mahmoud",
-     :commentDate   = "2025-03-15T09:00:00Z"]
+     :commentDate   = "2026-03-15T09:00:00Z"]
 )
 
 # Shortcut form:
@@ -1625,10 +1625,10 @@ doc.setMergeTemplate([
 ])
 
 recipients = [
-    [:Date = "1 March 2025", :Salutation = "Ms", :LastName = "Benali",
-     :ProgramName = "Ring MSc", :EnrolmentNumber = "MSC-2025-001"],
-    [:Date = "1 March 2025", :Salutation = "Mr", :LastName = "Mendes",
-     :ProgramName = "Ring MSc", :EnrolmentNumber = "MSC-2025-002"]
+    [:Date = "1 March 2026", :Salutation = "Ms", :LastName = "Benali",
+     :ProgramName = "Ring MSc", :EnrolmentNumber = "MSC-2026-001"],
+    [:Date = "1 March 2026", :Salutation = "Mr", :LastName = "Mendes",
+     :ProgramName = "Ring MSc", :EnrolmentNumber = "MSC-2026-002"]
 ]
 
 doc.mergeAll(recipients, "pagebreak")
