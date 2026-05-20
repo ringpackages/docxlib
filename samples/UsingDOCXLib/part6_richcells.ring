@@ -749,35 +749,35 @@ proj1Name.addRun("Ring 1.26", [:bold = true, :size = 12])
 proj1Name.addLineBreak()
 proj1Name.addRun("New language features", [:size = 9, :color = "gray"])
 
-proj1Status = wordCell("Delayed", [:bold = true, :color = "white", :bgColor = "4CAF50", :align = "center"])
+proj1Status = wordCell("Delayed", [:bold = true, :color = "white", :bgColor = "FF9800", :align = "center"])
 
 proj2Name = new WordCell()
 proj2Name.addRun("RingSlint UI", [:bold = true, :size = 12])
 proj2Name.addLineBreak()
 proj2Name.addRun("UI toolkit integration", [:size = 9, :color = "gray"])
 
-proj2Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "4CAF50", :align = "center"])
+proj2Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "FF9800", :align = "center"])
 
 proj3Name = new WordCell()
 proj3Name.addRun("Rust Bindings", [:bold = true, :size = 12])
 proj3Name.addLineBreak()
 proj3Name.addRun("Language interop layer", [:size = 9, :color = "gray"])
 
-proj3Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "FF9800", :align = "center"])
+proj3Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "4CAF50", :align = "center"])
 
 proj4Name = new WordCell()
 proj4Name.addRun("Closures", [:bold = true, :size = 12])
 proj4Name.addLineBreak()
 proj4Name.addRun("Language core feature", [:size = 9, :color = "gray"])
 
-proj4Status = wordCell("Complete", [:bold = true, :color = "white", :bgColor = "2196F3", :align = "center"])
+proj4Status = wordCell("At Risk", [:bold = true, :color = "white", :bgColor = "F44336", :align = "center"])
 
 proj5Name = new WordCell()
 proj5Name.addRun("Archive Package", [:bold = true, :size = 12])
 proj5Name.addLineBreak()
 proj5Name.addRun("Compression library", [:size = 9, :color = "gray"])
 
-proj5Status = wordCell("At Risk", [:bold = true, :color = "white", :bgColor = "F44336", :align = "center"])
+proj5Status = wordCell("Complete", [:bold = true, :color = "white", :bgColor = "2196F3", :align = "center"])
 
 tableData = [
     [hProject, hLead, hProg, hStatus],
@@ -819,7 +819,7 @@ crossMark = "NO"
 # Headers
 hFeature = wordCell("Feature", [:bold = true, :color = "white", :align = "center"])
 hRing    = wordCell("Ring", [:bold = true, :color = "white", :align = "center"])
-hPython  = wordCell("CPython", [:bold = true, :color = "white", :align = "center"])
+hPython  = wordCell("Python", [:bold = true, :color = "white", :align = "center"])
 hJava    = wordCell("Java", [:bold = true, :color = "white", :align = "center"])
 
 # Feature rows
