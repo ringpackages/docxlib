@@ -1,0 +1,21 @@
+/*
+    DOCXLib - Constants
+*/
+
+# Constants for alignment
+WORD_ALIGN_LEFT    = "left"
+WORD_ALIGN_CENTER  = "center"
+WORD_ALIGN_RIGHT   = "right"
+WORD_ALIGN_JUSTIFY = "both"
+
+# Constants for headings
+WORD_HEADING_1 = 1
+WORD_HEADING_2 = 2
+WORD_HEADING_3 = 3
+WORD_HEADING_4 = 4
+WORD_HEADING_5 = 5
+WORD_HEADING_6 = 6
+
+# Constants for list types
+WORD_LIST_BULLET   = 1
+WORD_LIST_NUMBER   = 2
