@@ -1,5 +1,5 @@
 /*
-	DOCXLib - Demo (Charts2)
+	DOCXLib - Demo (Charts3)
 */
 
 load "docxlib.ring"
@@ -18,7 +18,7 @@ load "docxlib.ring"
 */
 
 ? "================================================="
-? "  DOCXLib v1.12.1 -- Chart Formatting Demo"
+? "  DOCXLib -- Chart Formatting Demo"
 ? "================================================="
 ? ""
 
