@@ -756,7 +756,7 @@ proj2Name.addRun("RingSlint UI", [:bold = true, :size = 12])
 proj2Name.addLineBreak()
 proj2Name.addRun("UI toolkit integration", [:size = 9, :color = "gray"])
 
-proj2Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "FF9800", :align = "center"])
+proj2Status = wordCell("On Track", [:bold = true, :color = "white", :bgColor = "4CAF50", :align = "center"])
 
 proj3Name = new WordCell()
 proj3Name.addRun("Rust Bindings", [:bold = true, :size = 12])
