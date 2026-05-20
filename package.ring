@@ -5,11 +5,11 @@ aPackageInfo = [
 	:developer = "Mahmoud Fayed",
 	:email = "msfclipper@yahoo.com",
 	:license = "MIT License",
-	:version = "1.0.7",
+	:version = "1.0.8",
 	:ringversion = "1.26",
 	:versions = 	[
 		[
-			:version = "1.0.7",
+			:version = "1.0.8",
 			:branch = "master"
 		]
 	],
@@ -43,7 +43,10 @@ aPackageInfo = [
 		"samples/UsingDOCXLib/images/wr3d_test_img.bmp",
 		"samples/UsingDOCXLib/part2_charts.ring",
 		"samples/UsingDOCXLib/part2_charts2.ring",
-		"samples/UsingDOCXLib/part3_shapes.ring"
+		"samples/UsingDOCXLib/part3_shapes.ring",
+		"samples/UsingDOCXLib/part4_watermark.ring",
+		"samples/UsingDOCXLib/part4_watermark2.ring"
+
 	],
 	:windowsfiles = 	[
 
