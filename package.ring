@@ -34,7 +34,7 @@ aPackageInfo = [
 		"libraries/docxlib/lib/wordreader.ring",
 		"libraries/docxlib/lib/wordwriter.ring",
 		"libraries/docxlib/lib/wrfunctions.ring",
-		"samples/UsingDOCXLib/demo_intro.ring",
+		"samples/UsingDOCXLib/part1_intro.ring",
 		"samples/UsingDOCXLib/images/test1.png",
 		"samples/UsingDOCXLib/images/test2.jpg",
 		"samples/UsingDOCXLib/images/test3.bmp",
