@@ -33,7 +33,6 @@
 23. [Complete Example](#23-complete-example)
 24. [Mail Merge Template Engine](#24-mail-merge-template-engine)
 25. [Chart Data Tables](#25-chart-data-tables)
-26. [Version History](#26-version-history)
 
 **Reader**
 
@@ -1708,29 +1707,6 @@ doc.setChartDefaults([
 doc.addColumnChart("Revenue", quarters, series, [])
 doc.addLineChart("Trend", months, trendSeries, [:smooth = true])
 ```
-
----
-
-## 26. Version History
-
-| Version | Key Features Added |
-|---|---|
-| 1.0–1.5 | Paragraphs, tables, images, lists, styles, hyperlinks, footnotes, RTL |
-| 1.6 | Text boxes, custom styles, watermarks, multi-column, paragraph shading |
-| 1.7 | Odd/even headers, page background, per-side page borders |
-| 1.8 | Bookmarks, cross-references, tab stops with leaders, line numbers |
-| 1.9 | Comments/annotations, SEQ captions, mail merge MERGEFIELD |
-| 1.10 | Content controls (checkbox, dropdown, text), DrawingML shapes, themes |
-| 1.11 | Table of Figures, Table of Tables, `addTableOfSeq()` |
-| 1.12 | 6 native OOXML chart types: column, bar, line, area, pie, doughnut |
-| 1.12.1 | `addScatterChart()`, `addBubbleChart()` — numeric dual-axis charts |
-| 1.12.2 | Axis formatting: min/max, number formats, axis titles, gridlines control |
-| 1.12.3 | `setChartDefaults()`, `clearChartDefaults()`; conditional table formatting (8 conditions) |
-| 1.12.4 | Mail merge template engine: `setMergeTemplate()`, `mergeRecord()`, `mergeAll()`, `clearMergeTemplate()` |
-| 1.12.5 | Rich `WordCell` in merge templates: `mergeCell()`, `mergeFillWordCell()` |
-| Reader 3l | `addSectionBreak()` options: `:numColumns`, `:columnSpaceCm`; run `:lang` and `:charStyle` |
-| Reader 3m | Per-side cell borders: `setBorderSide()`, `setTopBorder()`, `setBottomBorder()`, `setLeftBorder()`, `setRightBorder()`, `setNoBorder()`; per-row heights: `:rowHeights`, `:rowHRule`; cell text direction: `setTextDir()` |
-| Reader 3n | Rich footnote/endnote bodies (run lists with per-run formatting); image cropping: `:cropLeft/Right/Top/Bottom`; widow/orphan control: `:widowControl=false`; suppress hyphenation: `:noHyphenate=true` |
 
 ---
 
