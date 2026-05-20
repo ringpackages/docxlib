@@ -55,7 +55,8 @@ aPackageInfo = [
 		"samples/UsingDOCXLib/part9_themes.ring",
 		"samples/UsingDOCXLib/part10_bookmarks.ring",
 		"samples/UsingDOCXLib/part11_tableofcontents.ring",
-		"samples/UsingDOCXLib/part12_footnotes.ring"
+		"samples/UsingDOCXLib/part12_footnotes.ring",
+		"samples/UsingDOCXLib/part13_paragraphshading.ring"
 	],
 	:windowsfiles = 	[
 
