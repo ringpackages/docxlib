@@ -2,47 +2,6 @@
 
 **Word Document Generation and Reading Library for the Ring Programming Language**
 
----
-
-## Table of Contents
-
-* [Introduction](#introduction)
-* [Document Setup](#document-setup)
-* [Headers, Footers, and Page Numbers](#headers-footers-and-page-numbers)
-* [Text and Paragraphs](#text-and-paragraphs)
-* [Lists](#lists)
-* [Tables](#tables)
-* [Images](#images)
-* [Text Watermarks](#text-watermarks)
-* [Page Borders and Background](#page-borders-and-background)
-* [Footnotes and Endnotes](#footnotes-and-endnotes)
-* [Hyperlinks, Bookmarks, and Cross-References](#hyperlinks-bookmarks-and-cross-references)
-* [Table of Contents](#table-of-contents)
-* [Captions and Lists of Figures / Tables](#captions-and-lists-of-figures--tables)
-* [Tab Stops and Line Numbers](#tab-stops-and-line-numbers)
-* [Comments](#comments)
-* [Mail Merge Fields](#mail-merge-fields)
-* [Content Controls](#content-controls)
-* [Drawing Shapes](#drawing-shapes)
-* [Text Boxes](#text-boxes)
-* [RTL Support](#rtl-support)
-* [Saving the Document](#saving-the-document)
-* [Native OOXML Charts](#native-ooxml-charts)
-* [Complete Example](#complete-example)
-* [Mail Merge Template Engine](#mail-merge-template-engine)
-* [Chart Data Tables](#chart-data-tables)
-* [Introduction to WordReader](#introduction-to-wordreader)
-* [Loading and Saving](#loading-and-saving)
-* [Document Properties](#document-properties)
-* [Content Query Methods](#content-query-methods)
-* [Table Query Methods](#table-query-methods)
-* [Image Query Methods](#image-query-methods)
-* [Section and Layout Queries](#section-and-layout-queries)
-* [Round-Trip: toWriter()](#round-trip-towriter)
-* [Reader Quick Reference](#reader-quick-reference)
-
----
-
 ## Introduction
 
 DOCXLib is a **pure-Ring** library for generating and reading Microsoft Word (`.docx`)
@@ -77,6 +36,8 @@ Ring programming language (any recent version). No additional packages required.
 
 	ringpm install docxlib from ringpackages
 
+---
+
 ### Quick Start
 
 ```ring
@@ -95,6 +56,44 @@ if doc.save("hello.docx")
     ? "Saved successfully"
 ok
 ```
+
+---
+
+## Table of Contents
+
+* [Document Setup](#document-setup)
+* [Headers, Footers, and Page Numbers](#headers-footers-and-page-numbers)
+* [Text and Paragraphs](#text-and-paragraphs)
+* [Lists](#lists)
+* [Tables](#tables)
+* [Images](#images)
+* [Text Watermarks](#text-watermarks)
+* [Page Borders and Background](#page-borders-and-background)
+* [Footnotes and Endnotes](#footnotes-and-endnotes)
+* [Hyperlinks, Bookmarks, and Cross-References](#hyperlinks-bookmarks-and-cross-references)
+* [Table of Contents](#table-of-contents)
+* [Captions and Lists of Figures / Tables](#captions-and-lists-of-figures--tables)
+* [Tab Stops and Line Numbers](#tab-stops-and-line-numbers)
+* [Comments](#comments)
+* [Mail Merge Fields](#mail-merge-fields)
+* [Content Controls](#content-controls)
+* [Drawing Shapes](#drawing-shapes)
+* [Text Boxes](#text-boxes)
+* [RTL Support](#rtl-support)
+* [Saving the Document](#saving-the-document)
+* [Native OOXML Charts](#native-ooxml-charts)
+* [Complete Example](#complete-example)
+* [Mail Merge Template Engine](#mail-merge-template-engine)
+* [Chart Data Tables](#chart-data-tables)
+* [Introduction to WordReader](#introduction-to-wordreader)
+* [Loading and Saving](#loading-and-saving)
+* [Document Properties](#document-properties)
+* [Content Query Methods](#content-query-methods)
+* [Table Query Methods](#table-query-methods)
+* [Image Query Methods](#image-query-methods)
+* [Section and Layout Queries](#section-and-layout-queries)
+* [Round-Trip: toWriter()](#round-trip-towriter)
+* [Reader Quick Reference](#reader-quick-reference)
 
 ---
 
