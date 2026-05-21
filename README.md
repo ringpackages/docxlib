@@ -1,12 +1,10 @@
 # DOCXLib
 
-**Word Document Generation and Reading Library for the Ring Programming Language**
+**Word Document Library for the Ring Programming Language**
 
 ## Overview
 
-DOCXLib is a **pure-Ring** library for generating and reading Microsoft Word (`.docx`)
-documents programmatically — no external tools, no COM automation, no Office installation
-required. 
+DOCXLib is a **pure-Ring** library for Word (`.docx`) documents. 
 
 ### Features
 
