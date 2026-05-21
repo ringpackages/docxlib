@@ -5,11 +5,11 @@ aPackageInfo = [
 	:developer = "Mahmoud Fayed",
 	:email = "msfclipper@yahoo.com",
 	:license = "MIT License",
-	:version = "1.0.40",
+	:version = "1.0.41",
 	:ringversion = "1.26",
 	:versions = 	[
 		[
-			:version = "1.0.40",
+			:version = "1.0.41",
 			:branch = "master"
 		]
 	],
@@ -63,7 +63,8 @@ aPackageInfo = [
 		"samples/UsingDOCXLib/part14_pagebackground.ring",
 		"samples/UsingDOCXLib/part15_mailmerge.ring",
 		"samples/UsingDOCXLib/part15_mailmerge2.ring",
-		"samples/UsingDOCXLib/part16_wordreader.ring"
+		"samples/UsingDOCXLib/part16_wordreader.ring",
+		"samples/UsingDOCXLib/helloworld.ring"
 	],
 	:windowsfiles = 	[
 
