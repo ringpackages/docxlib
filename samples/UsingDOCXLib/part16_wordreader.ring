@@ -226,6 +226,9 @@ ok
 ? "STEP 4: Applying modifications ..."
 ? ""
 
+wr.cTitle = substr(wr.cTitle,"2024","2025")
+wr.cHeaderText = substr(wr.cHeaderText,"2024","2025")
+
 # a) Global find/replace: update year throughout
 ? "  a) Global find/replace: 2024 -> 2025 ..."
 wr.replaceText("2024", "2025")
