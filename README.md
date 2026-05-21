@@ -76,18 +76,17 @@ required.
 ```ring
 load "docxlib.ring"
 
-doc = new WordWriter()
-doc.setTitle("My First Document")
-doc.setAuthor("Your Name")
-doc.setPageSize("a4")
+? "Generate File: hello.docx" 
 
-doc.addHeading("Hello, DOCXLib!", 1)
-doc.addParagraph("This document was created entirely from Ring code.", NULL)
-doc.addBulletList(["Feature A", "Feature B", "Feature C"])
-
-if doc.save("hello.docx")
-    ? "Saved successfully"
-ok
+new WordWriter() {
+	setTitle("My First Document")
+	setAuthor("Your Name")
+	setPageSize("a4")
+	addHeading("Hello, DOCXLib!", 1)
+	addParagraph("This document was created entirely from Ring code.", [:color = "0000FF"])
+	addBulletList(["Feature A", "Feature B", "Feature C"])
+	save("hello.docx")
+}
 ```
 ---
 
