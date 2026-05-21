@@ -1116,9 +1116,22 @@ class WordReader
                         ok
                     ok
                     # Determine bullet vs numbered from aListStyles
+                    # Resolve numId -> abstractNumId first, then look up isBullet
+                    listAbstractId = -1
+                    for ni2 in aNumInstances
+                        if ni2[:numId] = listNumId
+                            listAbstractId = ni2[:abstractNumId]
+                        ok
+                    next
                     for ls in aListStyles
-                        if ls[:id] = listNumId
-                            listIsBullet = ls[:isBullet]
+                        if listAbstractId >= 0
+                            if ls[:id] = listAbstractId
+                                listIsBullet = ls[:isBullet]
+                            ok
+                        else
+                            if ls[:id] = listNumId
+                                listIsBullet = ls[:isBullet]
+                            ok
                         ok
                     next
                     # Resolve startOverride from aNumInstances for numbered lists
@@ -4460,9 +4473,10 @@ class WordReader
                                     if run[:bold]      = true  cOpts[:bold]      = true  ok
                                     if run[:italic]    = true  cOpts[:italic]    = true  ok
                                     if run[:underline] = true  cOpts[:underline] = true  ok
-                                    if len(run[:color]) > 0   cOpts[:color]     = run[:color]  ok
-                                    if len(run[:font])  > 0   cOpts[:font]      = run[:font]   ok
-                                    if run[:size] > 0         cOpts[:size]      = run[:size]   ok
+                                    if len(run[:color])     > 0  cOpts[:color]     = run[:color]     ok
+                                    if len(run[:font])      > 0  cOpts[:font]      = run[:font]       ok
+                                    if run[:size]           > 0  cOpts[:size]      = run[:size]       ok
+                                    if len(run[:highlight]) > 0  cOpts[:highlight] = run[:highlight]  ok
                                 ok
                                 wc = wordCell(cText, cOpts)
                             ok

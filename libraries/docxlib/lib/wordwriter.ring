@@ -1972,10 +1972,10 @@ class WordWriter
             Add a multi-level (nested) list.
             items   : list of [text, level] pairs, level is 0-based (0 = top)
                       e.g. [["Item 1", 0], ["Sub item", 1], ["Item 2", 0]]
-            listType: WORD_LIST_BULLET or WORD_LIST_NUMBER
+            listType: 1 or 2
             startAt : starting number for level 0 (default 1)
         */
-        if listType = NULL  listType = WORD_LIST_BULLET  ok
+        if listType = NULL  listType = 1  ok  # 1 = 1
         if startAt  = NULL  startAt  = 1                 ok
         if !isNumber(startAt) or startAt < 1  startAt = 1  ok
         listDef = [
@@ -1992,21 +1992,21 @@ class WordWriter
     func addNestedNumberedListAt items, startAt
         /*  Add a numbered list starting at a custom value (e.g. restart mid-document).  */
         if startAt = NULL  startAt = 1  ok
-        return addNestedList(items, WORD_LIST_NUMBER, startAt)
+        return addNestedList(items, 2, startAt)  # 2 = 2
 
     func addNestedBulletList items
         /*
             Add a nested bullet list.
             items: list of [text, level] pairs
         */
-        return addNestedList(items, WORD_LIST_BULLET, 1)
+        return addNestedList(items, 1, 1)  # 1 = 1
 
     func addNestedNumberedList items
         /*
             Add a nested numbered list.
             items: list of [text, level] pairs
         */
-        return addNestedList(items, WORD_LIST_NUMBER, 1)
+        return addNestedList(items, 2, 1)  # 2 = 2
     
     func addTableOfContents title
         /*
