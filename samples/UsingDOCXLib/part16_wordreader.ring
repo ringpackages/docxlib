@@ -179,8 +179,8 @@ for i = 1 to bLen
 next
 ? ""
 
-? "--- Table 4 contents (Product Status) ---"
-tblIdx4 = wr.getTableBlockIndex(4)
+? "--- Table 5 contents (Product Status) ---"
+tblIdx4 = wr.getTableBlockIndex(5)
 if tblIdx4 > 0
     tbl = wr.getBlock(tblIdx4)
     rows = tbl[:rows]
@@ -217,7 +217,7 @@ ok
 ? "--- Specific cells ---"
 ? "  Table 1, Row 3, Col 1: " + wr.getCell(wr.getTableBlockIndex(1), 3, 1)
 ? "  Table 1, Row 3, Col 4: " + wr.getCell(wr.getTableBlockIndex(1), 3, 4)
-? "  Table 4, Row 3, Col 2: " + wr.getCell(tblIdx4, 3, 2)
+? "  Table 5, Row 4, Col 2: " + wr.getCell(tblIdx4, 4, 2)
 ? ""
 
 # =============================================================================
@@ -245,12 +245,12 @@ wr.setCell(t1, 5, 4, "$175")     # Ring Education Bundle
 ? "     New price for Ring Enterprise: " + wr.getCell(t1, 3, 4)
 ? ""
 
-# c) Update status for RingStar (table 4, row 3: BETA -> RELEASED)
+# c) Update status for RingStar (table 5, row 4: BETA -> RELEASED)
 ? "  c) Updating RingStar status: BETA -> RELEASED ..."
-wr.setTableCell(4, 3, 2, "RELEASED")
-wr.setTableCell(4, 3, 3, "Q1 2025")
-wr.setTableCell(4, 3, 4, "GA released January 2025")
-? "     New status: " + wr.getCell(wr.getTableBlockIndex(4), 3, 2)
+wr.setTableCell(5, 4, 2, "RELEASED")
+wr.setTableCell(5, 4, 3, "Q1 2025")
+wr.setTableCell(5, 4, 4, "GA released January 2025")
+? "     New status: " + wr.getCell(wr.getTableBlockIndex(5), 4, 2)
 ? ""
 
 # d) Rename a heading
@@ -336,8 +336,8 @@ next
 ? "  Title heading   : " + titleHeadingText
 
 # Verify RingStar status changed
-t4b2 = wr2.getTableBlockIndex(4)
-? "  RingStar status: " + wr2.getCell(t4b2, 3, 2)
+t4b2 = wr2.getTableBlockIndex(5)
+? "  RingStar status: " + wr2.getCell(t4b2, 4, 2)
 
 # Verify price change
 t1b2 = wr2.getTableBlockIndex(1)
