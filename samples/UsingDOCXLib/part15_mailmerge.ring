@@ -1,5 +1,5 @@
 /*
-	DOCXLib - Demo (Mail Merge)
+	DOCXLib - Demo (MailMerge)
 */
 
 load "docxlib.ring"
