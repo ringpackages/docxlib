@@ -2255,6 +2255,18 @@ class WordWriter
         imgCropB = options[:cropBottom]
 
         # Add to content
+        imgAlign   = options[:align]
+        imgBold    = options[:bold]
+        imgItalic  = options[:italic]
+        imgUnder   = options[:underline]
+        imgColor   = options[:color]
+        imgSize    = options[:size]
+        if imgAlign  = NULL  imgAlign  = ""     ok
+        if imgBold   = NULL  imgBold   = false   ok
+        if imgItalic = NULL  imgItalic = false   ok
+        if imgUnder  = NULL  imgUnder  = false   ok
+        if imgColor  = NULL  imgColor  = ""     ok
+        if imgSize   = NULL  imgSize   = 0       ok
         img = [
             :type    = "image",
             :relId   = relId,
@@ -2262,6 +2274,12 @@ class WordWriter
             :height  = heightEmu,
             :imageId = nImageId,
             :altText = imgAlt,
+            :align   = imgAlign,
+            :bold    = imgBold,
+            :italic  = imgItalic,
+            :underline = imgUnder,
+            :color   = imgColor,
+            :size    = imgSize,
             :cropL   = imgCropL,
             :cropR   = imgCropR,
             :cropT   = imgCropT,
@@ -4044,12 +4062,28 @@ class WordWriter
         
         if borderStyle != "none"
             xml_ += '<w:tblBorders>'
-            xml_ += '<w:top w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
-            xml_ += '<w:left w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
-            xml_ += '<w:bottom w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
-            xml_ += '<w:right w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
-            xml_ += '<w:insideH w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
-            xml_ += '<w:insideV w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
+            # If a per-side borders map was provided (round-trip from reader), use it;
+            # otherwise fall back to the single borderStyle/borderSize/borderColor for all sides.
+            brdMap2 = options[:bordersMap]
+            if isList(brdMap2) and len(brdMap2) > 0
+                for bdrE2 in brdMap2
+                    bdrSide2  = bdrE2[:side]
+                    bdrStyle2 = bdrE2[:style]
+                    bdrSz2    = bdrE2[:sz]
+                    bdrColor2 = bdrE2[:color]
+                    if bdrStyle2 = NULL or len(bdrStyle2) = 0  bdrStyle2 = borderStyle  ok
+                    if bdrSz2    = NULL or len(bdrSz2)    = 0  bdrSz2    = borderSize   ok
+                    if bdrColor2 = NULL or len(bdrColor2) = 0  bdrColor2 = borderColor  ok
+                    xml_ += '<w:' + bdrSide2 + ' w:val="' + bdrStyle2 + '" w:sz="' + bdrSz2 + '" w:space="0" w:color="' + bdrColor2 + '"/>'
+                next
+            else
+                xml_ += '<w:top w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
+                xml_ += '<w:left w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
+                xml_ += '<w:bottom w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
+                xml_ += '<w:right w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
+                xml_ += '<w:insideH w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
+                xml_ += '<w:insideV w:val="' + borderStyle + '" w:sz="' + borderSize + '" w:space="0" w:color="' + borderColor + '"/>'
+            ok
             xml_ += '</w:tblBorders>'
         ok
         
@@ -4207,7 +4241,13 @@ class WordWriter
                             xml_ += '<w:r><w:rPr><w:b/></w:rPr><w:t>' + wordXmlEsc(cellText) + '</w:t></w:r>'
                         ok
                     else
-                        xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
+                        cellJcXml3 = ""
+                        # cellAlign is not set in plain-string path; use empty (no jc)
+                        plainCellAlign = ""
+                        if len(cellVAlign) > 0 and isHeader  plainCellAlign = "center"  ok
+                        if len(plainCellAlign) > 0  cellJcXml3 = '<w:jc w:val="' + plainCellAlign + '"/>'
+                        ok
+                        xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>' + cellJcXml3 + '</w:pPr>'
                         # Build run properties for conditional formatting
                         rPr = ""
                         if cfBold  rPr += '<w:b/><w:bCs/>'  ok
@@ -4798,21 +4838,36 @@ class WordWriter
         width   = item[:width]
         height  = item[:height]
         imageId = item[:imageId]
-        centered = false
-        if item[:centered] = true
-            centered = true
+        # Alignment: :align string wins; :centered flag is legacy fallback
+        imgAlignVal = item[:align]
+        if imgAlignVal = NULL  imgAlignVal = ""  ok
+        if len(imgAlignVal) = 0 and item[:centered] = true
+            imgAlignVal = "center"
         ok
 
         srcRectXml = generateSrcRect(item)
 
         xml_ = '<w:p>'
-        
-        # Center alignment if requested
-        if centered
-            xml_ += '<w:pPr><w:jc w:val="center"/></w:pPr>'
+        if len(imgAlignVal) > 0
+            xml_ += '<w:pPr><w:jc w:val="' + imgAlignVal + '"/></w:pPr>'
         ok
         
+        # Run properties for the image-containing run
+        imgRPr = ""
+        if item[:bold]      = true   imgRPr += "<w:b/>"  ok
+        if item[:italic]    = true   imgRPr += "<w:i/>"  ok
+        if item[:underline] = true   imgRPr += '<w:u w:val="single"/>'  ok
+        if isString(item[:color]) and len(item[:color]) > 0
+            imgRPr += '<w:color w:val="' + item[:color] + '"/>'
+        ok
+        if isNumber(item[:size]) and item[:size] > 0
+            imgRPr += '<w:sz w:val="' + item[:size] + '"/>'
+            imgRPr += '<w:szCs w:val="' + item[:size] + '"/>'
+        ok
         xml_ += '<w:r>'
+        if len(imgRPr) > 0
+            xml_ += "<w:rPr>" + imgRPr + "</w:rPr>"
+        ok
         xml_ += '<w:drawing>'
         xml_ += '<wp:inline distT="0" distB="0" distL="0" distR="0">'
         xml_ += '<wp:extent cx="' + width + '" cy="' + height + '"/>'

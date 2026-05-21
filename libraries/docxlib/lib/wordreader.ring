@@ -1385,10 +1385,56 @@ class WordReader
         imgDistR    = 0.0
         imgPosX     = 0.0
         imgPosY     = 0.0
+        imgRunBold = false; imgRunItalic = false; imgRunUnder = false
+        imgRunColor = ""; imgRunSize = 0
         drawS = wrFindFrom(pXml, "<w:drawing>", 1)
         if drawS = 0  drawS = wrFindFrom(pXml, "<w:drawing ", 1)  ok
         if drawS > 0
             isImage = true
+            # Extract run-level formatting from the <w:r> that contains the drawing
+            imgRunStart = 0
+            imgRs1 = wrFindFrom(pXml, "<w:r>", 1)
+            imgRs2 = wrFindFrom(pXml, "<w:r ", 1)
+            imgRs  = wrMinPos(imgRs1, imgRs2)
+            while imgRs > 0 and imgRs < drawS
+                imgRunStart = imgRs
+                imgRs = wrMinPos(wrFindFrom(pXml, "<w:r>", imgRs+1), wrFindFrom(pXml, "<w:r ", imgRs+1))
+            end
+            if imgRunStart > 0
+                imgRunEnd = wrFindCloseTag(pXml, "w:r", imgRunStart)
+                if imgRunEnd > 0
+                    imgRXml = substr(pXml, imgRunStart, imgRunEnd - imgRunStart)
+                    imgRPrS = wrFindFrom(imgRXml, "<w:rPr>", 1)
+                    if imgRPrS = 0  imgRPrS = wrFindFrom(imgRXml, "<w:rPr ", 1)  ok
+                    if imgRPrS > 0
+                        imgRPrE = wrFindCloseTag(imgRXml, "w:rPr", imgRPrS)
+                        if imgRPrE > 0
+                            imgRPrXml = substr(imgRXml, imgRPrS, imgRPrE - imgRPrS)
+                            if wrFindFrom(imgRPrXml, "<w:b/>", 1) > 0 or wrFindFrom(imgRPrXml, "<w:b ", 1) > 0
+                                imgRunBold = true
+                            ok
+                            if wrFindFrom(imgRPrXml, "<w:i/>", 1) > 0 or wrFindFrom(imgRPrXml, "<w:i ", 1) > 0
+                                imgRunItalic = true
+                            ok
+                            if wrFindFrom(imgRPrXml, "<w:u ", 1) > 0
+                                imgRunUnder = true
+                            ok
+                            imgColS = wrFindFrom(imgRPrXml, "<w:color ", 1)
+                            if imgColS > 0
+                                imgColEl = substr(imgRPrXml, imgColS, 80)
+                                imgColV  = wrAttr(imgColEl, "w:val")
+                                if len(imgColV) > 0 and imgColV != "auto"  imgRunColor = imgColV  ok
+                            ok
+                            imgSzS = wrFindFrom(imgRPrXml, "<w:sz ", 1)
+                            if imgSzS > 0
+                                imgSzEl = substr(imgRPrXml, imgSzS, 80)
+                                imgSzV  = wrAttr(imgSzEl, "w:val")
+                                if len(imgSzV) > 0  imgRunSize = number(imgSzV)  ok
+                            ok
+                        ok
+                    ok
+                ok
+            ok
             # Detect anchor vs inline
             anchorS = wrFindFrom(pXml, "<wp:anchor ", drawS)
             if anchorS > 0
@@ -1773,7 +1819,13 @@ class WordReader
             block[:relId]    = imageRelId
             block[:altText]  = imgAltText
             block[:bookmark] = bookmarkName
-            block[:floating] = isFloating
+            block[:align]      = alignVal
+            block[:runBold]    = imgRunBold
+            block[:runItalic]  = imgRunItalic
+            block[:runUnder]   = imgRunUnder
+            block[:runColor]   = imgRunColor
+            block[:runSize]    = imgRunSize
+            block[:floating]   = isFloating
             block[:wrapType] = imgWrapType
             block[:wrapSide] = imgWrapSide
             block[:distT]    = imgDistT
@@ -1958,6 +2010,7 @@ class WordReader
         # Table border style
         tblBorderStyle = "single"
         tblBorderColor = "auto"
+        tblBordersMap  = []
         tblStyleName   = ""
         tblWidthTwips  = 0
         tblWidthType   = "auto"
@@ -2039,14 +2092,32 @@ class WordReader
                     tblBdrE = wrFindCloseTag(tblPrXml, "w:tblBorders", tblBdrS)
                     if tblBdrE > 0
                         tblBdrXml = substr(tblPrXml, tblBdrS, tblBdrE - tblBdrS)
-                        topS = wrFindFrom(tblBdrXml, "<w:top ", 1)
-                        if topS = 0  topS = wrFindFrom(tblBdrXml, "<w:insideH ", 1)  ok
-                        if topS > 0
-                            topEl = substr(tblBdrXml, topS, 120)
-                            bsv = wrAttr(topEl, "w:val")
-                            bcv = wrAttr(topEl, "w:color")
-                            if len(bsv) > 0  tblBorderStyle = bsv  ok
-                            if len(bcv) > 0 and bcv != "auto"  tblBorderColor = bcv  ok
+                        # Parse each border side independently
+                        aSides = ["top", "left", "bottom", "right", "insideH", "insideV"]
+                        tblBordersMap = []
+                        for bdrSideName in aSides
+                            bdrSideS = wrFindFrom(tblBdrXml, "<w:" + bdrSideName + " ", 1)
+                            if bdrSideS > 0
+                                bdrSideEl = substr(tblBdrXml, bdrSideS, 150)
+                                bdrSideVal  = wrAttr(bdrSideEl, "w:val")
+                                bdrSideSz   = wrAttr(bdrSideEl, "w:sz")
+                                bdrSideColor= wrAttr(bdrSideEl, "w:color")
+                                tblBordersMap + [:side=bdrSideName, :style=bdrSideVal, :sz=bdrSideSz, :color=bdrSideColor]
+                            ok
+                        next
+                        # Set legacy single-style fields from top (or insideH fallback)
+                        for bdrEntry in tblBordersMap
+                            if bdrEntry[:side] = "top"
+                                if len(bdrEntry[:style]) > 0  tblBorderStyle = bdrEntry[:style]  ok
+                                if len(bdrEntry[:color]) > 0 and bdrEntry[:color] != "auto"  tblBorderColor = bdrEntry[:color]  ok
+                            ok
+                        next
+                        if tblBorderStyle = "single" and len(tblBordersMap) > 0
+                            for bdrEntry in tblBordersMap
+                                if bdrEntry[:side] = "insideH" and len(bdrEntry[:style]) > 0
+                                    tblBorderStyle = bdrEntry[:style]
+                                ok
+                            next
                         ok
                     ok
                 ok
@@ -2143,6 +2214,7 @@ class WordReader
         block[:evenRowBg]    = evenRowBg
         block[:borderStyle]  = tblBorderStyle
         block[:borderColor]  = tblBorderColor
+        block[:bordersMap]   = tblBordersMap
         block[:rowHeights]   = aRowHeights
         block[:rowHRules]    = aRowHRules
         block[:rowCantSplit] = aRowCantSplit
@@ -4420,7 +4492,8 @@ class WordReader
                             if cRSpan      > 1  cOpts[:rowspan]       = cRSpan  ok
                             if len(cAlign) > 0  cOpts[:align]         = cAlign  ok
                             if len(cVAl)   > 0  cOpts[:verticalAlign] = cVAl    ok
-                            if isHeader         cOpts[:bold]          = true    ok
+                            # Do not force bold for header row; let source run formatting carry through
+                            # if isHeader  cOpts[:bold] = true  ok
 
                             # Decide cell creation strategy:
                             # - Image cells: empty wordCell + addCellImage
@@ -4559,8 +4632,14 @@ class WordReader
                     next
                     tableData + rowData
                 next
-                tOpts = [:headerRow=true, :borderStyle=brdStyle]
+                # Only treat first row as header if it has a distinct background.
+                # Using headerRow=true unconditionally adds bold+center to the
+                # first row even when the source had no such formatting.
+                bHasRealHeader = len(hdrBg) > 0
+                tOpts = [:headerRow=bHasRealHeader, :borderStyle=brdStyle]
                 if brdColor != "auto"   tOpts[:borderColor]    = brdColor  ok
+                brdMap = block[:bordersMap]
+                if isList(brdMap) and len(brdMap) > 0  tOpts[:bordersMap] = brdMap  ok
                 if len(hdrBg) > 0       tOpts[:headerBgColor]  = hdrBg     ok
                 if len(evenBg) > 0      tOpts[:evenRowBgColor] = evenBg    ok
                 if len(colWids) > 0     tOpts[:colWidths]      = colWids   ok
@@ -4901,6 +4980,15 @@ class WordReader
                     # F2 (v3n): image crop round-trip
                     iOpts3 = []
                     if len(alt3) > 0  iOpts3[:altText] = alt3  ok
+                    al3 = block[:align]
+                    if al3 != NULL and len(al3) > 0  iOpts3[:align] = al3  ok
+                    if block[:runBold]   = true  iOpts3[:bold]      = true  ok
+                    if block[:runItalic] = true  iOpts3[:italic]    = true  ok
+                    if block[:runUnder]  = true  iOpts3[:underline] = true  ok
+                    irColor = block[:runColor]
+                    irSize  = block[:runSize]
+                    if irColor != NULL and len(irColor) > 0  iOpts3[:color] = irColor  ok
+                    if isNumber(irSize) and irSize > 0  iOpts3[:size] = irSize  ok
                     icL = block[:cropL]; icR = block[:cropR]
                     icT = block[:cropT]; icB = block[:cropB]
                     if isNumber(icL) and icL > 0  iOpts3[:cropLeft]   = icL  ok
