@@ -28,39 +28,10 @@ required.
 | Rich notes | Footnote and endnote bodies with full per-run formatting (bold, italic, colour, size) |
 | WordReader | Parse any `.docx` — extract all content and styles; full round-trip reconstruct and save |
 
-### Requirements
-
-Ring programming language (any recent version). No additional packages required.
-
-### Installation
-
-	ringpm install docxlib from ringpackages
-
----
-
-### Quick Start
-
-```ring
-load "docxlib.ring"
-
-doc = new WordWriter()
-doc.setTitle("My First Document")
-doc.setAuthor("Your Name")
-doc.setPageSize("a4")
-
-doc.addHeading("Hello, DOCXLib!", 1)
-doc.addParagraph("This document was created entirely from Ring code.", NULL)
-doc.addBulletList(["Feature A", "Feature B", "Feature C"])
-
-if doc.save("hello.docx")
-    ? "Saved successfully"
-ok
-```
-
----
-
 ## Table of Contents
 
+* [Installation](#installation)
+* [Quick Start](#quick-start)
 * [Document Setup](#document-setup)
 * [Headers, Footers, and Page Numbers](#headers-footers-and-page-numbers)
 * [Text and Paragraphs](#text-and-paragraphs)
@@ -95,6 +66,32 @@ ok
 * [Round-Trip: toWriter()](#round-trip-towriter)
 * [Reader Quick Reference](#reader-quick-reference)
 
+---
+
+## Installation
+
+	ringpm install docxlib from ringpackages
+
+---
+
+## Quick Start
+
+```ring
+load "docxlib.ring"
+
+doc = new WordWriter()
+doc.setTitle("My First Document")
+doc.setAuthor("Your Name")
+doc.setPageSize("a4")
+
+doc.addHeading("Hello, DOCXLib!", 1)
+doc.addParagraph("This document was created entirely from Ring code.", NULL)
+doc.addBulletList(["Feature A", "Feature B", "Feature C"])
+
+if doc.save("hello.docx")
+    ? "Saved successfully"
+ok
+```
 ---
 
 ## Document Setup
