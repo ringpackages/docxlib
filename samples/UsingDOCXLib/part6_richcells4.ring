@@ -327,7 +327,7 @@ focus1.addCellBulletList(["Ring Language core", "Compiler optimization", "VM per
 doc.addTable([
     [h1, h2, h3, h4],
     [dept1, "Mahmoud", "Lead Developer", focus1],
-    [wordMergeCell(), "Ahmed", "Senior Developer", "Libraries & Extensions"],
+    [wordMergeCell(), "Youssef", "Senior Developer", "Libraries & Extensions"],
     [wordMergeCell(), "Omar", "Junior Developer", "Documentation & Testing"],
     [dept2, "Sara", "QA Lead", "Test automation"],
     [wordMergeCell(), "Fatima", "QA Engineer", "Manual & integration testing"]
