@@ -132,7 +132,7 @@ doc.addTable([
 ])
 
 if doc.save("demo_richcells2_numbered.docx")
-    ? "  Created: demo_richcells2__numbered.docx"
+    ? "  Created: demo_richcells2_numbered.docx"
 else
     ? "  FAILED: demo_richcells2_numbered.docx"
 ok
