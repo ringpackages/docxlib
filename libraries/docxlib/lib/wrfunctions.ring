@@ -104,57 +104,338 @@ func wrReadU32 data, pos
     b4 = ascii(substr(data, pos+3, 1))
     return b1 + b2*256 + b3*65536 + b4*16777216
 
-func wrExtractZip zipPath, destDir
+func wrExtractZip wriez_zipPath, wriez_destDir
     /*
-        Extract all STORE entries from a ZIP file into destDir.
-        ringwordlib writes docx files with STORE (no compression),
-        so this pure-Ring extractor works without any external tools.
+        Extract all entries from a ZIP file into destDir.
+        Handles STORE (method=0) via pure-Ring code.
+        Handles DEFLATE (method=8) via pure-Ring wrInflateData().
+        No external tools or OS calls needed - works everywhere.
     */
-    data = read(zipPath)
-    dataLen = len(data)
-    sep = wordGetSep()
-    if right(destDir, 1) != sep and right(destDir, 1) != "/"
-        destDir += sep
+    wriez_data    = read(wriez_zipPath)
+    wriez_dataLen = len(wriez_data)
+    wriez_sep     = wordGetSep()
+    if right(wriez_destDir, 1) != wriez_sep and right(wriez_destDir, 1) != "/"
+        wriez_destDir += wriez_sep
     ok
-    pos = 1
-    while pos <= dataLen - 4
-        b1 = ascii(substr(data, pos,   1))
-        b2 = ascii(substr(data, pos+1, 1))
-        b3 = ascii(substr(data, pos+2, 1))
-        b4 = ascii(substr(data, pos+3, 1))
-        if b1 = 80 and b2 = 75 and b3 = 3 and b4 = 4
-            method   = wrReadU16(data, pos + 8)
-            compSize = wrReadU32(data, pos + 18)
-            fnLen    = wrReadU16(data, pos + 26)
-            extraLen = wrReadU16(data, pos + 28)
-            entryName = substr(data, pos + 30, fnLen)
-            dataStart = pos + 30 + fnLen + extraLen
-            if method = 0 and compSize > 0 and dataStart + compSize - 1 <= dataLen
-                fileData = substr(data, dataStart, compSize)
-                outPath = destDir + entryName
-                if sep = char(92)
-                    outPath = substr(outPath, "/", sep)
+
+    wriez_pos = 1
+    while wriez_pos <= wriez_dataLen - 4
+        wriez_b1 = ascii(substr(wriez_data, wriez_pos,   1))
+        wriez_b2 = ascii(substr(wriez_data, wriez_pos+1, 1))
+        wriez_b3 = ascii(substr(wriez_data, wriez_pos+2, 1))
+        wriez_b4 = ascii(substr(wriez_data, wriez_pos+3, 1))
+        if wriez_b1 = 80 and wriez_b2 = 75 and wriez_b3 = 3 and wriez_b4 = 4
+            wriez_method   = wrReadU16(wriez_data, wriez_pos + 8)
+            wriez_compSize = wrReadU32(wriez_data, wriez_pos + 18)
+            wriez_fnLen    = wrReadU16(wriez_data, wriez_pos + 26)
+            wriez_extraLen = wrReadU16(wriez_data, wriez_pos + 28)
+            wriez_entryName = substr(wriez_data, wriez_pos + 30, wriez_fnLen)
+            wriez_dataStart = wriez_pos + 30 + wriez_fnLen + wriez_extraLen
+
+            if wriez_method = 0 or wriez_method = 8
+                if wriez_method = 0
+                    wriez_fileData = substr(wriez_data, wriez_dataStart, wriez_compSize)
+                else
+                    wriez_fileData = wrInflateData(substr(wriez_data, wriez_dataStart, wriez_compSize))
                 ok
-                lastSep = 0
-                outPathLen = len(outPath)
-                for ci = outPathLen to 1 step -1
-                    if substr(outPath, ci, 1) = sep or substr(outPath, ci, 1) = "/"
-                        lastSep = ci
-                        break
+
+                if len(wriez_fileData) > 0
+                    wriez_outPath = wriez_destDir + wriez_entryName
+                    if wriez_sep = char(92)
+                        wriez_outPath = substr(wriez_outPath, "/", wriez_sep)
                     ok
-                next
-                if lastSep > 0
-                    parentDir = substr(outPath, 1, lastSep - 1)
-                    wordMakeDir(parentDir)
+                    wriez_lastSep = 0
+                    for wriez_ci = len(wriez_outPath) to 1 step -1
+                        if substr(wriez_outPath, wriez_ci, 1) = wriez_sep or substr(wriez_outPath, wriez_ci, 1) = "/"
+                            wriez_lastSep = wriez_ci
+                            break
+                        ok
+                    next
+                    if wriez_lastSep > 0
+                        wordMakeDir(substr(wriez_outPath, 1, wriez_lastSep - 1))
+                    ok
+                    write(wriez_outPath, wriez_fileData)
                 ok
-                write(outPath, fileData)
             ok
-            pos = dataStart + compSize
+            wriez_pos = wriez_dataStart + wriez_compSize
         else
-            pos++
+            wriez_pos++
         ok
     end
 
+/*
+    wrInflateData - Pure-Ring DEFLATE (RFC 1951) decompressor
+    For Ring language (which uses dynamic/shared variable scope).
+    ALL internal variables are prefixed wri_ to avoid caller conflicts.
+    
+    Usage:
+        result = wrInflateData(compressedString)
+        Returns decompressed string, or "" on error.
+*/
+
+func wrInflateData wri_cData
+    wri_nDataLen = len(wri_cData)
+    # State list: [bitbuf, bitcnt, bytepos, output]
+    wri_st = [0, 0, 1, ""]
+    wri_bFinal = false
+    while not wri_bFinal
+        # Read BFINAL (1 bit)
+        wrInfNeed(wri_st, wri_cData, wri_nDataLen, 1)
+        wri_bFinal = (wrInfPeek(wri_st, 1) = 1)
+        wrInfDrop(wri_st, 1)
+        # Read BTYPE (2 bits)
+        wrInfNeed(wri_st, wri_cData, wri_nDataLen, 2)
+        wri_nType = wrInfPeek(wri_st, 2)
+        wrInfDrop(wri_st, 2)
+        if wri_nType = 0
+            wrInfStored(wri_st, wri_cData, wri_nDataLen)
+        elseif wri_nType = 1
+            wrInfFixed(wri_st, wri_cData, wri_nDataLen)
+        elseif wri_nType = 2
+            wrInfDynamic(wri_st, wri_cData, wri_nDataLen)
+        else
+            return ""
+        ok
+        if len(wri_st[4]) > 67108864  return ""  ok
+    end
+    return wri_st[4]
+
+func wrInfNeed wri_st, wri_cData, wri_nDataLen, wri_n
+    while wri_st[2] < wri_n
+        if wri_st[3] > wri_nDataLen  return  ok
+        wri_st[1] = wri_st[1] | (ascii(substr(wri_cData, wri_st[3], 1)) << wri_st[2])
+        wri_st[3]++
+        wri_st[2] += 8
+    end
+
+func wrInfPeek wri_st, wri_n
+    return wri_st[1] & ((1 << wri_n) - 1)
+
+func wrInfDrop wri_st, wri_n
+    wri_st[1] = wri_st[1] >> wri_n
+    wri_st[2] -= wri_n
+
+func wrInfBits wri_st, wri_cData, wri_nDataLen, wri_n
+    wrInfNeed(wri_st, wri_cData, wri_nDataLen, wri_n)
+    wri_v = wrInfPeek(wri_st, wri_n)
+    wrInfDrop(wri_st, wri_n)
+    return wri_v
+
+func wrInfStored wri_st, wri_cData, wri_nDataLen
+    wri_st[1] = 0
+    wri_st[2] = 0
+    if wri_st[3] + 3 > wri_nDataLen  return  ok
+    wri_nLEN = ascii(substr(wri_cData, wri_st[3], 1)) | (ascii(substr(wri_cData, wri_st[3]+1, 1)) << 8)
+    wri_st[3] += 4
+    if wri_st[3] + wri_nLEN - 1 > wri_nDataLen  return  ok
+    wri_st[4] += substr(wri_cData, wri_st[3], wri_nLEN)
+    wri_st[3] += wri_nLEN
+
+func wrBuildHuff wri_aLens, wri_nSyms
+    wri_aCount = list(16)
+    for wri_i = 1 to 16  wri_aCount[wri_i] = 0  next
+    for wri_i = 1 to wri_nSyms
+        if wri_aLens[wri_i] > 0  wri_aCount[wri_aLens[wri_i]]++  ok
+    next
+    wri_aNext = list(16)
+    wri_code = 0
+    wri_aNext[1] = 0
+    for wri_i = 2 to 15
+        wri_code = (wri_code + wri_aCount[wri_i-1]) << 1
+        wri_aNext[wri_i] = wri_code
+    next
+    wri_aTable = []
+    for wri_sym = 1 to wri_nSyms
+        wri_l = wri_aLens[wri_sym]
+        if wri_l > 0
+            wri_entry = [wri_aNext[wri_l], wri_l, wri_sym - 1]
+            wri_aTable + wri_entry
+            wri_aNext[wri_l]++
+        ok
+    next
+    return wri_aTable
+
+func wrHuffDecode wri_st, wri_cData, wri_nDataLen, wri_aTable
+    wri_nCode = 0
+    wri_nBits = 0
+    for wri_b = 1 to 15
+        wrInfNeed(wri_st, wri_cData, wri_nDataLen, 1)
+        wri_nCode = (wri_nCode << 1) | wrInfPeek(wri_st, 1)
+        wrInfDrop(wri_st, 1)
+        wri_nBits++
+        for wri_i = 1 to len(wri_aTable)
+            wri_e = wri_aTable[wri_i]
+            if wri_e[2] = wri_nBits and wri_e[1] = wri_nCode
+                return wri_e[3]
+            ok
+        next
+    next
+    return -1
+
+func wrFixedLitLens
+    wri_aLens = list(288)
+    for wri_i = 1   to 144  wri_aLens[wri_i] = 8  next
+    for wri_i = 145 to 256  wri_aLens[wri_i] = 9  next
+    for wri_i = 257 to 280  wri_aLens[wri_i] = 7  next
+    for wri_i = 281 to 288  wri_aLens[wri_i] = 8  next
+    return wri_aLens
+
+func wrFixedDistLens
+    wri_aLens = list(32)
+    for wri_i = 1 to 32  wri_aLens[wri_i] = 5  next
+    return wri_aLens
+
+func wrInfFixed wri_st, wri_cData, wri_nDataLen
+    wri_aLitLens  = wrFixedLitLens()
+    wri_aDistLens = wrFixedDistLens()
+    wri_aLitTab   = wrBuildHuff(wri_aLitLens,  288)
+    wri_aDistTab  = wrBuildHuff(wri_aDistLens, 32)
+    wrInfCodes(wri_st, wri_cData, wri_nDataLen, wri_aLitTab, wri_aDistTab)
+
+func wrInfCodes wri_st, wri_cData, wri_nDataLen, wri_aLitTab, wri_aDistTab
+    wri_aLenBase  = [3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258]
+    wri_aLenExtra = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0]
+    wri_aDistBase = [1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577]
+    wri_aDistExtra= [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13]
+    while true
+        wri_sym = wrHuffDecode(wri_st, wri_cData, wri_nDataLen, wri_aLitTab)
+        if wri_sym < 0  return  ok
+        if wri_sym < 256
+            wri_st[4] += char(wri_sym)
+        elseif wri_sym = 256
+            return
+        else
+            wri_lenIdx = wri_sym - 256  # 1-based: sym=257->idx=1
+            if wri_lenIdx < 1 or wri_lenIdx > 29  return  ok
+            wri_nLen = wri_aLenBase[wri_lenIdx]
+            wri_nEx  = wri_aLenExtra[wri_lenIdx]
+            if wri_nEx > 0
+                wri_nLen += wrInfBits(wri_st, wri_cData, wri_nDataLen, wri_nEx)
+            ok
+            wri_distSym = wrHuffDecode(wri_st, wri_cData, wri_nDataLen, wri_aDistTab)
+            if wri_distSym < 0 or wri_distSym > 29  return  ok
+            wri_nDist = wri_aDistBase[wri_distSym + 1]
+            wri_nDex  = wri_aDistExtra[wri_distSym + 1]
+            if wri_nDex > 0
+                wri_nDist += wrInfBits(wri_st, wri_cData, wri_nDataLen, wri_nDex)
+            ok
+            wri_nOutLen = len(wri_st[4])
+            wri_nStart  = wri_nOutLen - wri_nDist + 1
+            for wri_k = 1 to wri_nLen
+                wri_pos = wri_nStart + wri_k - 1
+                if wri_pos < 1
+                    wri_st[4] += char(0)
+                else
+                    wri_st[4] += substr(wri_st[4], wri_pos, 1)
+                ok
+            next
+        ok
+    end
+
+func wrInfDynamic wri_st, wri_cData, wri_nDataLen
+    wri_nHLIT  = wrInfBits(wri_st, wri_cData, wri_nDataLen, 5) + 257
+    wri_nHDIST = wrInfBits(wri_st, wri_cData, wri_nDataLen, 5) + 1
+    wri_nHCLEN = wrInfBits(wri_st, wri_cData, wri_nDataLen, 4) + 4
+    wri_aOrder = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15]
+    wri_aCLLens = list(19)
+    for wri_i = 1 to 19  wri_aCLLens[wri_i] = 0  next
+    for wri_i = 1 to wri_nHCLEN
+        wri_aCLLens[wri_aOrder[wri_i] + 1] = wrInfBits(wri_st, wri_cData, wri_nDataLen, 3)
+    next
+    wri_aCLTab = wrBuildHuff(wri_aCLLens, 19)
+    wri_nTotal = wri_nHLIT + wri_nHDIST
+    wri_aAllLens = list(wri_nTotal)
+    for wri_i = 1 to wri_nTotal  wri_aAllLens[wri_i] = 0  next
+    wri_i = 1
+    while wri_i <= wri_nTotal
+        wri_sym = wrHuffDecode(wri_st, wri_cData, wri_nDataLen, wri_aCLTab)
+        if wri_sym < 0  return  ok
+        if wri_sym <= 15
+            wri_aAllLens[wri_i] = wri_sym
+            wri_i++
+        elseif wri_sym = 16
+            if wri_i <= 1  return  ok
+            wri_prev = wri_aAllLens[wri_i-1]
+            wri_rep = wrInfBits(wri_st, wri_cData, wri_nDataLen, 2) + 3
+            for wri_r = 1 to wri_rep
+                if wri_i > wri_nTotal  return  ok
+                wri_aAllLens[wri_i] = wri_prev
+                wri_i++
+            next
+        elseif wri_sym = 17
+            wri_rep = wrInfBits(wri_st, wri_cData, wri_nDataLen, 3) + 3
+            for wri_r = 1 to wri_rep
+                if wri_i > wri_nTotal  return  ok
+                wri_aAllLens[wri_i] = 0
+                wri_i++
+            next
+        elseif wri_sym = 18
+            wri_rep = wrInfBits(wri_st, wri_cData, wri_nDataLen, 7) + 11
+            for wri_r = 1 to wri_rep
+                if wri_i > wri_nTotal  return  ok
+                wri_aAllLens[wri_i] = 0
+                wri_i++
+            next
+        else
+            return
+        ok
+    end
+    wri_aLitLens  = list(wri_nHLIT)
+    wri_aDistLens = list(wri_nHDIST)
+    for wri_i = 1 to wri_nHLIT   wri_aLitLens[wri_i]  = wri_aAllLens[wri_i]             next
+    for wri_i = 1 to wri_nHDIST  wri_aDistLens[wri_i] = wri_aAllLens[wri_nHLIT + wri_i] next
+    wri_aLitTab  = wrBuildHuff(wri_aLitLens,  wri_nHLIT)
+    wri_aDistTab = wrBuildHuff(wri_aDistLens, wri_nHDIST)
+    wrInfCodes(wri_st, wri_cData, wri_nDataLen, wri_aLitTab, wri_aDistTab)
+
+func wrIsSelfClosingTag wrisc_xml, wrisc_tagStart
+    /*
+        Return true if the opening tag at wrisc_tagStart is self-closing (ends with "/>").
+        Correctly skips over attribute values enclosed in double-quotes.
+    */
+    wrisc_len    = len(wrisc_xml)
+    wrisc_pos    = wrisc_tagStart + 1
+    wrisc_inStr  = false
+    while wrisc_pos <= wrisc_len
+        wrisc_ch = substr(wrisc_xml, wrisc_pos, 1)
+        if wrisc_inStr
+            if wrisc_ch = char(34)  wrisc_inStr = false  ok
+        else
+            if wrisc_ch = char(34)
+                wrisc_inStr = true
+            elseif wrisc_ch = ">"
+                if wrisc_pos > 1
+                    return substr(wrisc_xml, wrisc_pos - 1, 1) = "/"
+                ok
+                return false
+            ok
+        ok
+        wrisc_pos++
+    end
+    return false
+
+func wrSelfClosingEnd wrisc_xml, wrisc_tagStart
+    /*
+        Return the position immediately after the ">" of a self-closing tag.
+        Works for both self-closing (<w:p ... />) and regular opening tags.
+    */
+    wrisc_len   = len(wrisc_xml)
+    wrisc_pos   = wrisc_tagStart + 1
+    wrisc_inStr = false
+    while wrisc_pos <= wrisc_len
+        wrisc_ch = substr(wrisc_xml, wrisc_pos, 1)
+        if wrisc_inStr
+            if wrisc_ch = char(34)  wrisc_inStr = false  ok
+        else
+            if wrisc_ch = char(34)
+                wrisc_inStr = true
+            elseif wrisc_ch = ">"
+                return wrisc_pos + 1
+            ok
+        ok
+        wrisc_pos++
+    end
+    return 0
 
 func wrStripTrackedChanges pXml
     /*
