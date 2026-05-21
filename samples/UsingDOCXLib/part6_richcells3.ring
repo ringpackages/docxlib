@@ -182,34 +182,34 @@ h2 = wordCell("Summary", [:bold = true, :color = "white", :bgColor = "0D47A1", :
 
 # Row 1 - Sales chart placeholder
 chart1 = new WordCell()
-chart1.addRun("Q1 2024", [:bold = true, :size = 18, :color = "1565C0"])
+chart1.addRun("Q1 2026", [:bold = true, :size = 18, :color = "1565C0"])
 chart1.addLineBreak()
 chart1.addRun("$1.2M Revenue", [:size = 14])
 chart1.setAlign("center")
 chart1.setBgColor("E3F2FD")
-chart1.addCellCaption("Figure 1: Q1 2024 Revenue Overview")
+chart1.addCellCaption("Figure 1: Q1 2026 Revenue Overview")
 
 summary1 = new WordCell()
 summary1.addRun("Key Metrics:", [:bold = true])
 numId1 = doc.registerCellList(WORD_LIST_NUMBER)
 summary1.addCellNumberedList(["Revenue up 23% YoY", "New customers: 450", "Retention rate: 94%"], numId1)
-summary1.addCellCaption("Source: Internal Sales Dashboard, March 2024")
+summary1.addCellCaption("Source: Internal Sales Dashboard, March 2026")
 summary1.setVerticalAlign("center")
 
 # Row 2
 chart2 = new WordCell()
-chart2.addRun("Q2 2024", [:bold = true, :size = 18, :color = "2E7D32"])
+chart2.addRun("Q2 2026", [:bold = true, :size = 18, :color = "2E7D32"])
 chart2.addLineBreak()
 chart2.addRun("$1.5M Revenue", [:size = 14])
 chart2.setAlign("center")
 chart2.setBgColor("E8F5E9")
-chart2.addCellCaption("Figure 2: Q2 2024 Revenue Overview")
+chart2.addCellCaption("Figure 2: Q2 2026 Revenue Overview")
 
 summary2 = new WordCell()
 summary2.addRun("Key Metrics:", [:bold = true])
 numId2 = doc.registerCellList(WORD_LIST_NUMBER)
 summary2.addCellNumberedList(["Revenue up 25% QoQ", "New customers: 520", "Retention rate: 96%"], numId2)
-summary2.addCellCaption("Source: Internal Sales Dashboard, June 2024")
+summary2.addCellCaption("Source: Internal Sales Dashboard, May 2026")
 summary2.setVerticalAlign("center")
 
 doc.addTable([
@@ -251,12 +251,12 @@ h2 = wordCell("Project", [:bold = true, :color = "white", :bgColor = "263238", :
 h3 = wordCell("Details & Progress", [:bold = true, :color = "white", :bgColor = "263238", :align = "center", :verticalAlign = "center"])
 h4 = wordCell("Status", [:bold = true, :color = "white", :bgColor = "263238", :align = "center", :verticalAlign = "center"])
 
-# Row 1 - Ring 1.22
+# Row 1 - Ring 1.26
 num1 = wordCell("1", [:bold = true, :align = "center"])
 num1.setVerticalAlign("center")
 
 proj1 = new WordCell()
-proj1.addRun("Ring 1.22", [:bold = true, :size = 12, :color = "1565C0"])
+proj1.addRun("Ring 1.26", [:bold = true, :size = 12, :color = "1565C0"])
 proj1.addLineBreak()
 proj1.addRun("Programming Language", [:italic = true, :size = 9, :color = "gray"])
 proj1.setVerticalAlign("center")
@@ -264,10 +264,10 @@ proj1.setVerticalAlign("center")
 details1 = new WordCell()
 details1.addRun("Release Highlights:", [:bold = true])
 details1.addCellBulletList(["Closures support", "RingSlint UI toolkit", "Rust language bindings", "Archive and Proc packages"], bulletId)
-details1.addCellBlockQuote("Ring 1.22 represents a major step forward with modern language features while maintaining backward compatibility.")
+details1.addCellBlockQuote("Ring 1.26 represents a major step forward with modern language features while maintaining backward compatibility.")
 details1.addRun("Links:", [:bold = true])
 details1.addCellHyperlink("Ring Official Website", linkRing)
-details1.addCellCaption("Released: January 2025")
+details1.addCellCaption("Released: February 2026")
 
 status1 = new WordCell()
 status1.addRun("RELEASED", [:bold = true, :color = "green", :size = 11])
