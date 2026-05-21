@@ -435,7 +435,7 @@ students = [
      :OverallGrade = "A", :OverallDesc = "Distinction", :OverallAvg = "90",
      :OverallColor = "375623",
      :TutorComment = "Alice is one of our strongest students. Recommended for PhD track.",
-     :TutorName    = "Prof. Mahmoud Fayed"],
+     :TutorName    = "Prof. Ali"],
 
     [:StudentName = "Carlos Mendes",
      :Programme   = "Ring Language MSc -- Year 1",
@@ -454,7 +454,7 @@ students = [
      :OverallGrade = "B", :OverallDesc = "Merit", :OverallAvg = "77",
      :OverallColor = "BDD7EE",
      :TutorComment = "Carlos shows real-world focus. Encourage deeper theoretical study.",
-     :TutorName    = "Prof. Mahmoud Fayed"],
+     :TutorName    = "Prof. Ali"],
 
     [:StudentName = "Amina Diallo",
      :Programme   = "Ring Language MSc -- Year 1",
@@ -473,7 +473,7 @@ students = [
      :OverallGrade = "C", :OverallDesc = "Pass", :OverallAvg = "71",
      :OverallColor = "FFC000",
      :TutorComment = "Amina excels in visual programming. Mathematics requires urgent attention.",
-     :TutorName    = "Prof. Mahmoud Fayed"]
+     :TutorName    = "Prof. Ali"]
 ]
 
 doc.mergeAll(students, "pagebreak")
