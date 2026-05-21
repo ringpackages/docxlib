@@ -6,50 +6,50 @@
 
 ## Table of Contents
 
-* [1. Introduction](#1-introduction)
-* [2. Document Setup](#2-document-setup)
-* [3. Headers, Footers, and Page Numbers](#3-headers-footers-and-page-numbers)
-* [4. Text and Paragraphs](#4-text-and-paragraphs)
-* [5. Lists](#5-lists)
-* [6. Tables](#6-tables)
-* [7. Images](#7-images)
-* [8. Text Watermarks](#8-text-watermarks)
-* [9. Page Borders and Background](#9-page-borders-and-background)
-* [10. Footnotes and Endnotes](#10-footnotes-and-endnotes)
-* [11. Hyperlinks, Bookmarks, and Cross-References](#11-hyperlinks-bookmarks-and-cross-references)
-* [12. Table of Contents](#12-table-of-contents)
-* [13. Captions and Lists of Figures / Tables](#13-captions-and-lists-of-figures--tables)
-* [14. Tab Stops and Line Numbers](#14-tab-stops-and-line-numbers)
-* [15. Comments](#15-comments)
-* [16. Mail Merge Fields](#16-mail-merge-fields)
-* [17. Content Controls](#17-content-controls)
-* [18. Drawing Shapes](#18-drawing-shapes)
-* [19. Text Boxes](#19-text-boxes)
-* [20. RTL Support](#20-rtl-support)
-* [21. Saving the Document](#21-saving-the-document)
-* [22. Native OOXML Charts](#22-native-ooxml-charts)
-* [23. Complete Example](#23-complete-example)
-* [24. Mail Merge Template Engine](#24-mail-merge-template-engine)
-* [25. Chart Data Tables](#25-chart-data-tables)
-* [26. Introduction to WordReader](#26-introduction-to-wordreader)
-* [27. Loading and Saving](#27-loading-and-saving)
-* [28. Document Properties](#28-document-properties)
-* [29. Content Query Methods](#29-content-query-methods)
-* [30. Table Query Methods](#30-table-query-methods)
-* [31. Image Query Methods](#31-image-query-methods)
-* [32. Section and Layout Queries](#32-section-and-layout-queries)
-* [33. Round-Trip: toWriter()](#33-round-trip-towriter)
-* [34. Reader Quick Reference](#34-reader-quick-reference)
+* [Introduction](#introduction)
+* [Document Setup](#document-setup)
+* [Headers, Footers, and Page Numbers](#headers-footers-and-page-numbers)
+* [Text and Paragraphs](#text-and-paragraphs)
+* [Lists](#lists)
+* [Tables](#tables)
+* [Images](#images)
+* [Text Watermarks](#text-watermarks)
+* [Page Borders and Background](#page-borders-and-background)
+* [Footnotes and Endnotes](#footnotes-and-endnotes)
+* [Hyperlinks, Bookmarks, and Cross-References](#hyperlinks-bookmarks-and-cross-references)
+* [Table of Contents](#table-of-contents)
+* [Captions and Lists of Figures / Tables](#captions-and-lists-of-figures--tables)
+* [Tab Stops and Line Numbers](#tab-stops-and-line-numbers)
+* [Comments](#comments)
+* [Mail Merge Fields](#mail-merge-fields)
+* [Content Controls](#content-controls)
+* [Drawing Shapes](#drawing-shapes)
+* [Text Boxes](#text-boxes)
+* [RTL Support](#rtl-support)
+* [Saving the Document](#saving-the-document)
+* [Native OOXML Charts](#native-ooxml-charts)
+* [Complete Example](#complete-example)
+* [Mail Merge Template Engine](#mail-merge-template-engine)
+* [Chart Data Tables](#chart-data-tables)
+* [Introduction to WordReader](#introduction-to-wordreader)
+* [Loading and Saving](#loading-and-saving)
+* [Document Properties](#document-properties)
+* [Content Query Methods](#content-query-methods)
+* [Table Query Methods](#table-query-methods)
+* [Image Query Methods](#image-query-methods)
+* [Section and Layout Queries](#section-and-layout-queries)
+* [Round-Trip: toWriter()](#round-trip-towriter)
+* [Reader Quick Reference](#reader-quick-reference)
 
 ---
 
-## 1. Introduction
+## Introduction
 
 DOCXLib is a **pure-Ring** library for generating and reading Microsoft Word (`.docx`)
 documents programmatically — no external tools, no COM automation, no Office installation
 required. 
 
-### 1.1 Key Features
+### Key Features
 
 | Category | Capability |
 |---|---|
@@ -69,15 +69,15 @@ required.
 | Rich notes | Footnote and endnote bodies with full per-run formatting (bold, italic, colour, size) |
 | WordReader | Parse any `.docx` — extract all content and styles; full round-trip reconstruct and save |
 
-### 1.2 Requirements
+### Requirements
 
 Ring programming language (any recent version). No additional packages required.
 
-### 1.3 Installation
+### Installation
 
 	ringpm install docxlib from ringpackages
 
-### 1.4 Quick Start
+### Quick Start
 
 ```ring
 load "docxlib.ring"
@@ -98,12 +98,12 @@ ok
 
 ---
 
-## 2. Document Setup
+## Document Setup
 
 Setup methods configure global document properties and should be called **before** adding
 content.
 
-### 2.1 Document Metadata
+### Document Metadata
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -112,7 +112,7 @@ content.
 | `setDefaultFont()` | `fontName, fontSize` | Body font and size in pt. Defaults: Calibri, 11pt |
 | `addCustomProperty()` | `name, value` | Add a custom document property (written to custom.xml) |
 
-### 2.2 Page Size and Orientation
+### Page Size and Orientation
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -129,7 +129,7 @@ doc.setPageSize("a4")
 doc.setMargins(2.54, 2.54, 2.54, 2.54)   # 1 inch all sides
 ```
 
-### 2.3 Multi-Column Layouts
+### Multi-Column Layouts
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -165,7 +165,7 @@ doc.addTable(wideData, options)
 doc.addLandscapeEnd()
 ```
 
-### 2.4 Document Themes
+### Document Themes
 
 `setTheme()` applies a colour palette to all heading levels and writes `word/theme/theme1.xml`.
 Call it before `save()`.
@@ -185,7 +185,7 @@ doc.setTheme("Blue")
 | `Teal` | #00796B Teal | #009688 Medium Teal |
 | `Warm` | #E65100 Deep Orange | #F57C00 Orange |
 
-### 2.5 Custom Paragraph Styles
+### Custom Paragraph Styles
 
 `defineStyle()` registers a named paragraph style. Use the style name via `:style` in
 `addParagraph()`.
@@ -225,7 +225,7 @@ doc.addParagraph("This uses the custom style.", [:style = "CalloutBox"])
 
 ---
 
-## 3. Headers, Footers, and Page Numbers
+## Headers, Footers, and Page Numbers
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -258,9 +258,9 @@ doc.setEvenPageHeader("Mahmoud, 2026")   # even pages (left side)
 
 ---
 
-## 4. Text and Paragraphs
+## Text and Paragraphs
 
-### 4.1 `addParagraph()`
+### `addParagraph()`
 
 The primary content method. Pass `[]` or `NULL` as the second argument to use all defaults.
 
@@ -295,7 +295,7 @@ doc.addParagraph("Custom style",     [:style="CalloutBox"])
 | `:widowControl` | false | Set `false` to disable widow/orphan protection (Word default is on) |
 | `:noHyphenate` | true | Suppress automatic hyphenation on this paragraph |
 
-### 4.2 Headings and Titles
+### Headings and Titles
 
 ```ring
 doc.addHeading("Chapter 1 — Introduction", 1)   # Heading 1
@@ -305,7 +305,7 @@ doc.addTitle("Document Title")                   # Title style
 doc.addSubtitle("A subtitle line")               # Subtitle style
 ```
 
-### 4.3 `addRichParagraph()` — Mixed Formatting
+### `addRichParagraph()` — Mixed Formatting
 
 Build a paragraph from an explicit list of `[text, options]` run pairs. Each run can
 carry its own bold, italic, colour, size, font, language, and character style.
@@ -334,7 +334,7 @@ doc.addRichParagraph([
 Run-level option keys: `:text`, `:bold`, `:italic`, `:underline`, `:color`, `:size`,
 `:font`, `:bgColor`, `:charStyle`, `:lang`.
 
-### 4.4 Shorthand Methods
+### Shorthand Methods
 
 | Method | Description |
 |---|---|
@@ -355,7 +355,7 @@ Run-level option keys: `:text`, `:bold`, `:italic`, `:underline`, `:color`, `:si
 | `addPageBreak()` | Hard page break |
 | `addLineBreak()` | Soft line break within a paragraph |
 
-### 4.5 Shaded and Bordered Paragraphs
+### Shaded and Bordered Paragraphs
 
 ```ring
 # Solid background colour
@@ -372,7 +372,7 @@ doc.addBorderedParagraph("Critical warning", [
 ])
 ```
 
-### 4.6 Widow/Orphan Control and Auto-Hyphenation
+### Widow/Orphan Control and Auto-Hyphenation
 
 Word protects against widows (last line stranded on the next page) and orphans (first
 line stranded at the bottom) by default. You can also suppress automatic hyphenation
@@ -391,7 +391,7 @@ doc.addParagraph(body, [:align="both", :widowControl=false, :noHyphenate=true])
 
 ---
 
-## 5. Lists
+## Lists
 
 DOCXLib generates proper Word OOXML list numbering — not manually inserted bullet
 characters.
@@ -421,9 +421,9 @@ doc.addNestedNumberedList([
 
 ---
 
-## 6. Tables
+## Tables
 
-### 6.1 Table Creation Methods
+### Table Creation Methods
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -431,7 +431,7 @@ doc.addNestedNumberedList([
 | `addSimpleTable()` | `data` | Plain table with no header styling |
 | `addStyledTable()` | `data, headerBg, evenBg` | Quick styled table with two colour parameters |
 
-### 6.2 Table Options
+### Table Options
 
 | Option | Type | Description |
 |---|---|---|
@@ -475,7 +475,7 @@ doc.addTable(data, [
 ])
 ```
 
-### 6.3 Rich Cell Content — `WordCell`
+### Rich Cell Content — `WordCell`
 
 For cells needing mixed formatting, images, lists, or cell spanning:
 
@@ -527,7 +527,7 @@ hdr = wordCell("Category", [:bold=true, :color="white", :bgColor="37474F"])
 > **Tip:** Use `wordCell(text, options)` as a shorthand to create a `WordCell` with a
 > single text run in one line.
 
-### 6.4 Per-Side Cell Borders and Text Direction
+### Per-Side Cell Borders and Text Direction
 
 **Per-side borders** give each cell edge an independent style, colour, and weight.
 This makes it easy to build accent-left sidebars, coloured header underlines, and
@@ -581,7 +581,7 @@ colHdr2.setTextDir("tbRl")
 | `"tbRl"` | Top-to-bottom: text rotated 90° CW (reads downward) |
 | `"lrTb"` | Normal horizontal (default — also clears a previous direction) |
 
-### 6.5 Conditional Table Formatting
+### Conditional Table Formatting
 
 Conditional rules apply per-cell background colour, text colour, and bold weight based
 on the cell's value. Rules are evaluated in order; a later rule overrides an earlier one
@@ -617,9 +617,9 @@ doc.addTable(data, [
 
 ---
 
-## 7. Images
+## Images
 
-### 7.1 Inline Images
+### Inline Images
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -662,7 +662,7 @@ doc.addImageWithOptions("landscape.png", 10, 6, [
 > **Note:** Cropping is non-destructive. The full image is embedded; only the displayed
 > viewport changes. Uses the OOXML `a:srcRect` element.
 
-### 7.2 Floating Images
+### Floating Images
 
 `addFloatingImage()` positions an image independently of the text flow.
 
@@ -679,7 +679,7 @@ doc.addFloatingImage("logo.png", 4, 3, [
 ])
 ```
 
-### 7.3 Image Watermarks
+### Image Watermarks
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -698,7 +698,7 @@ doc.setImageWatermark("logo_grey.png", [:widthCm=10, :opacity=25])
 
 ---
 
-## 8. Text Watermarks
+## Text Watermarks
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -729,7 +729,7 @@ doc.setWatermark("CONFIDENTIAL", [
 
 ---
 
-## 9. Page Borders and Background
+## Page Borders and Background
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -765,7 +765,7 @@ doc.setPageBackground("EBF3FB")
 
 ---
 
-## 10. Footnotes and Endnotes
+## Footnotes and Endnotes
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -818,16 +818,16 @@ doc.addEndnote(
 
 ---
 
-## 11. Hyperlinks, Bookmarks, and Cross-References
+## Hyperlinks, Bookmarks, and Cross-References
 
-### 11.1 Hyperlinks
+### Hyperlinks
 
 ```ring
 doc.addHyperlink("Ring Language Website", "http://ring-lang.github.io")
 doc.addHyperlink("Send Email", "mailto:info@ring-lang.github.io")
 ```
 
-### 11.2 Bookmarks
+### Bookmarks
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -843,7 +843,7 @@ doc.addParagraph("See the results ", NULL)
 doc.addBookmark("results_anchor")
 ```
 
-### 11.3 Cross-References
+### Cross-References
 
 `addCrossRef()` inserts a Word REF field that resolves to the page number of the named
 bookmark when the user presses F9.
@@ -855,7 +855,7 @@ doc.addCrossRef("bm_intro", "see Introduction on page ")
 
 ---
 
-## 12. Table of Contents
+## Table of Contents
 
 `addTableOfContents()` inserts a Word TOC field that collects all Heading 1–3 paragraphs.
 
@@ -872,9 +872,9 @@ doc.addHeading("1.1 Background", 2)
 
 ---
 
-## 13. Captions and Lists of Figures / Tables
+## Captions and Lists of Figures / Tables
 
-### 13.1 SEQ Captions
+### SEQ Captions
 
 ```ring
 # After an image:
@@ -888,7 +888,7 @@ doc.addTable(data, options)
 # → renders as:  Table 1 — Feature comparison across Ring versions
 ```
 
-### 13.2 Table of Figures and Table of Tables
+### Table of Figures and Table of Tables
 
 Caption entries are **pre-populated** from captions already added — lists are visible
 immediately on open without pressing F9.
@@ -908,9 +908,9 @@ doc.addTableOfSeq("Equation", "List of Equations")
 
 ---
 
-## 14. Tab Stops and Line Numbers
+## Tab Stops and Line Numbers
 
-### 14.1 Tabbed Paragraphs
+### Tabbed Paragraphs
 
 ```ring
 # TOC-style dot leader:
@@ -939,7 +939,7 @@ doc.addTabbedParagraph(["Name", "Role", "Score", "Grade"], multiTabs)
 | `:align` | `"left"` / `"center"` / `"right"` / `"decimal"` | Alignment at the stop |
 | `:leader` | `"none"` / `"dot"` / `"hyphen"` / `"underscore"` | Fill character between stops |
 
-### 14.2 Line Numbers
+### Line Numbers
 
 ```ring
 doc.enableLineNumbers([
@@ -963,7 +963,7 @@ doc.disableLineNumbers()   # turn off for remaining paragraphs
 
 ---
 
-## 15. Comments
+## Comments
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -986,7 +986,7 @@ doc.addComment("See Table 3 for benchmark data.",
 
 ---
 
-## 16. Mail Merge Fields
+## Mail Merge Fields
 
 Mail merge fields create `.docx` templates that Word merges with data sources. Each
 `MERGEFIELD` placeholder is replaced with a real value during the merge.
@@ -1014,12 +1014,12 @@ doc.addMergeTemplate([
 
 ---
 
-## 17. Content Controls
+## Content Controls
 
 Content controls embed interactive form elements in the DOCX. Users can fill in the form
 without enabling macros.
 
-### 17.1 Checkbox
+### Checkbox
 
 ```ring
 doc.addCheckbox("I accept the Terms and Conditions",      true)   # pre-checked
@@ -1028,7 +1028,7 @@ doc.addCheckbox("Enable two-factor authentication",       true)
 doc.addCheckbox("Allow anonymous usage statistics",       false)
 ```
 
-### 17.2 Dropdown List
+### Dropdown List
 
 ```ring
 doc.addDropdown("Country",
@@ -1042,7 +1042,7 @@ doc.addDropdown("Experience Level",
 )
 ```
 
-### 17.3 Text Input
+### Text Input
 
 ```ring
 doc.addTextInput("Full Name",    "",                    "Enter your full name")
@@ -1053,12 +1053,12 @@ doc.addTextInput("Comments",     "Pre-filled default",  NULL)
 
 ---
 
-## 18. Drawing Shapes
+## Drawing Shapes
 
 Inline DrawingML shapes embedded in the document flow. All shapes support fill colour,
 border, and an optional text label.
 
-### 18.1 Shape Methods
+### Shape Methods
 
 | Method | Shape type | Notes |
 |---|---|---|
@@ -1069,7 +1069,7 @@ border, and an optional text label.
 | `addLine(options)` | Horizontal rule | Thin coloured rect; use `:height` for thickness |
 | `addShape(type, options)` | Any of the above | Generic form |
 
-### 18.2 Shape Options
+### Shape Options
 
 | Option | Type | Description |
 |---|---|---|
@@ -1107,7 +1107,7 @@ doc.addEllipse([:width=3, :height=3, :fillColor="7030A0",
 
 ---
 
-## 19. Text Boxes
+## Text Boxes
 
 `addTextBox()` inserts a floating VML text box positioned absolutely relative to the page.
 
@@ -1127,7 +1127,7 @@ doc.addTextBox("This content floats beside the main body text.", [
 
 ---
 
-## 20. RTL Support
+## RTL Support
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -1146,7 +1146,7 @@ doc.addRTLParagraph("النص العربي هنا", NULL)
 
 ---
 
-## 21. Saving the Document
+## Saving the Document
 
 ```ring
 if doc.save("output.docx")
@@ -1169,12 +1169,12 @@ ok
 
 ---
 
-## 22. Native OOXML Charts
+## Native OOXML Charts
 
 Chart types are stored as pure XML inside the DOCX package with
 inline data caches, so charts are completely self-contained with no linked spreadsheet.
 
-### 22.1 Chart Methods
+### Chart Methods
 
 #### Category-based charts (use string category labels)
 
@@ -1195,7 +1195,7 @@ inline data caches, so charts are completely self-contained with no linked sprea
 | `addScatterChart(title, series, opts)` | XY scatter | Correlation, scientific data, irregular X spacing |
 | `addBubbleChart(title, series, opts)` | Bubble | Three-variable data — X, Y, and a size dimension |
 
-### 22.2 Series Format
+### Series Format
 
 #### Category-based series (column, bar, line, area, pie, doughnut)
 
@@ -1227,7 +1227,7 @@ inline data caches, so charts are completely self-contained with no linked sprea
 If `:color` is omitted for any series type the library cycles through an 8-colour
 Office palette automatically.
 
-### 22.3 Options Reference
+### Options Reference
 
 #### Layout and legend options (all chart types)
 
@@ -1303,7 +1303,7 @@ Office palette automatically.
 | `:xAxisTitle` | String | `""` | X axis label |
 | `:yAxisTitle` | String | `""` | Y axis label |
 
-### 22.4 Code Examples
+### Code Examples
 
 **Column chart — three series, data labels:**
 
@@ -1478,7 +1478,7 @@ doc.addScatterChart(
 ```
 
 
-### 22.4.1 Pie and Doughnut: Single Series Only
+### Pie and Doughnut: Single Series Only
 
 Pie and doughnut charts render **only the first series**. If more than one series is
 passed, DOCXLib prints a warning to the console and silently discards the
@@ -1499,7 +1499,7 @@ doc.addColumnChart("Sales 2023 vs 2024", cats, [
 ], [:legendPos = "b"])
 ```
 
-### 22.5 OOXML Internals
+### OOXML Internals
 
 Each chart adds three components to the DOCX package automatically:
 
@@ -1521,7 +1521,7 @@ both axes are `<c:valAx>` rather than `<c:catAx>` + `<c:valAx>`.
 
 ---
 
-## 23. Complete Example
+## Complete Example
 
 ```ring
 load "docxlib.ring"
@@ -1583,11 +1583,11 @@ doc.save("report.docx")
 
 ---
 
-## 24. Mail Merge Template Engine
+## Mail Merge Template Engine
 
 A full template-based mail merge engine. Define a template once with `setMergeTemplate()`, then call `mergeRecord()` or `mergeAll()` to produce personalised documents for any number of records.
 
-### 24.1 API
+### API
 
 | Method | Description |
 |---|---|
@@ -1598,7 +1598,7 @@ A full template-based mail merge engine. Define a template once with `setMergeTe
 
 **`mergeAll` separator values:** `"pagebreak"` (default) · `"emptyline"` · `"line"` · `"none"`
 
-### 24.2 Template Item Types
+### Template Item Types
 
 A template is a Ring list. Each item is either a plain string or an associative list:
 
@@ -1613,7 +1613,7 @@ A template is a Ring list. Each item is either a plain string or an associative 
 
 `{{FIELD}}` tokens work in all text fields including table cells. Unknown fields are left as-is.
 
-### 24.3 Data Record Format
+### Data Record Format
 
 A data record is a Ring associative list:
 
@@ -1634,7 +1634,7 @@ dataList = [
 ]
 ```
 
-### 24.4 Code Examples
+### Code Examples
 
 **Simple letter — three recipients, page break between each:**
 
@@ -1684,11 +1684,11 @@ doc.mergeAll(invoices, "pagebreak")
 
 ---
 
-## 25. Chart Data Tables
+## Chart Data Tables
 
 The `:showDataTable = true` option renders the chart's source data in a compact bordered table directly beneath the plot area — useful for printed reports where readers need exact values.
 
-### 25.1 Options
+### Options
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -1698,7 +1698,7 @@ The `:showDataTable = true` option renders the chart's source data in a compact 
 **Supported chart types:** column, bar, line, area
 **Not applicable to:** pie, doughnut, scatter, bubble
 
-### 25.2 Code Examples
+### Code Examples
 
 **Column chart with data table and legend keys:**
 
@@ -1746,7 +1746,7 @@ doc.clearChartDefaults()
 
 ---
 
-## 26. Introduction to WordReader
+## Introduction to WordReader
 
 `WordReader` (`docxlib.ring`) parses any `.docx` file and provides:
 
@@ -1774,7 +1774,7 @@ reader.cleanup()
 
 ---
 
-## 27. Loading and Saving
+## Loading and Saving
 
 | Method | Parameters | Description |
 |---|---|---|
@@ -1789,7 +1789,7 @@ reader.cleanup()
 
 ---
 
-## 28. Document Properties
+## Document Properties
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1834,9 +1834,9 @@ reader.cleanup()
 
 ---
 
-## 29. Content Query Methods
+## Content Query Methods
 
-### 29.1 Summary and Block Listing
+### Summary and Block Listing
 
 ```ring
 ? reader.summary()        # human-readable content overview
@@ -1844,7 +1844,7 @@ reader.listBlocks()       # numbered block list with type + preview
 blocks = reader.getBlocks()  # raw list of all parsed blocks
 ```
 
-### 29.2 Paragraphs and Runs
+### Paragraphs and Runs
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1868,7 +1868,7 @@ blocks = reader.getBlocks()  # raw list of all parsed blocks
 | `getCharStyles()` | List | All character style names found in the document |
 | `getTextBoxes()` | List of `[:text]` | Floating text box content |
 
-### 29.3 Lists, Hyperlinks, Captions, Bookmarks
+### Lists, Hyperlinks, Captions, Bookmarks
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1878,7 +1878,7 @@ blocks = reader.getBlocks()  # raw list of all parsed blocks
 | `getCaptions()` | List of `[:text, :label, :seqNum]` | SEQ figure/table captions |
 | `getBookmarks()` | List of `[:name, :text]` | Named bookmark anchors |
 
-### 29.4 Footnotes and Endnotes
+### Footnotes and Endnotes
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1905,7 +1905,7 @@ for fn in footnotes
 next
 ```
 
-### 29.5 Comments, Fields, Charts
+### Comments, Fields, Charts
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1916,7 +1916,7 @@ next
 | `getCharts()` | List of `[:type, :title, :widthCm, :heightCm]` | Embedded chart metadata |
 | `getChartData()` | List with full series data | Charts with categories and series values |
 
-### 29.6 Form Fields
+### Form Fields
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1927,7 +1927,7 @@ next
 
 ---
 
-## 30. Table Query Methods
+## Table Query Methods
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1971,7 +1971,7 @@ cell[:padTop/Bottom/Left/Right] — padding in twips
 
 ---
 
-## 31. Image Query Methods
+## Image Query Methods
 
 | Method | Returns | Description |
 |---|---|---|
@@ -1996,7 +1996,7 @@ block[:cropB]     — bottom crop in percent
 
 ---
 
-## 32. Section and Layout Queries
+## Section and Layout Queries
 
 | Method | Returns | Description |
 |---|---|---|
@@ -2024,7 +2024,7 @@ item[:columnSpaceCm] — column spacing in cm
 
 ---
 
-## 33. Round-Trip: `toWriter()`
+## Round-Trip: `toWriter()`
 
 `toWriter()` rebuilds the entire parsed document as a `WordWriter` instance. You can
 then add new content, modify page settings, or just call `save()` to produce a clean
@@ -2070,7 +2070,7 @@ reader.cleanup()
 
 ---
 
-## 34. Reader Quick Reference
+## Reader Quick Reference
 
 ```ring
 load "docxlib.ring"
