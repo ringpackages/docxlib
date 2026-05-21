@@ -10,23 +10,21 @@ required.
 
 ### Key Features
 
-| Category | Capability |
-|---|---|
-| Zero dependencies | Pure Ring |
-| Fluent API | Every method returns `self`, enabling method chaining |
-| OOXML compliant | Files open without repair warnings in Word 2016–365 |
-| Rich tables | Cell merging, per-side borders, row heights, text direction, images, lists inside cells |
-| Full typography | Bold/italic/colour/font/size per run, language tags, character styles, custom paragraph styles |
-| Paragraph control | Widow/orphan control, hyphenation suppression, keep-together, contextual spacing |
-| Navigation | TOC, Table of Figures, Table of Tables, bookmarks, cross-refs |
-| Forms | Checkboxes, dropdowns, and text input content controls |
-| Shapes | Rectangle, ellipse, diamond, triangle, line (DrawingML) |
-| Themes | 8 built-in colour palettes applied to all heading levels |
-| Charts | 8 native OOXML chart types with axis formatting, data tables, and style presets |
-| Mail Merge | Template engine: `setMergeTemplate()`, `mergeRecord()`, `mergeAll()` with `{{FIELD}}` tokens |
-| Image cropping | Non-destructive `a:srcRect` crop by percentage on inline and floating images |
-| Rich notes | Footnote and endnote bodies with full per-run formatting (bold, italic, colour, size) |
-| WordReader | Parse any `.docx` — extract all content and styles; full round-trip reconstruct and save |
+* **Zero dependencies** — Pure Ring
+* **Fluent API** — Every method returns `self`, enabling method chaining
+* **OOXML compliant** — Files open without repair warnings in Word 2016–365
+* **Rich tables** — Cell merging, per-side borders, row heights, text direction, images, lists inside cells
+* **Full typography** — Bold/italic/colour/font/size per run, language tags, character styles, custom paragraph styles
+* **Paragraph control** — Widow/orphan control, hyphenation suppression, keep-together, contextual spacing
+* **Navigation** — TOC, Table of Figures, Table of Tables, bookmarks, cross-refs
+* **Forms** — Checkboxes, dropdowns, and text input content controls
+* **Shapes** — Rectangle, ellipse, diamond, triangle, line (DrawingML)
+* **Themes** — 8 built-in colour palettes applied to all heading levels
+* **Charts** — 8 native OOXML chart types with axis formatting, data tables, and style presets
+* **Mail Merge** — Template engine: `setMergeTemplate()`, `mergeRecord()`, `mergeAll()` with `{{FIELD}}` tokens
+* **Image cropping** — Non-destructive `a:srcRect` crop by percentage on inline and floating images
+* **Rich notes** — Footnote and endnote bodies with full per-run formatting (bold, italic, colour, size)
+* **WordReader** — Parse any `.docx` — extract all content and styles; full round-trip reconstruct and save
 
 ## Table of Contents
 
