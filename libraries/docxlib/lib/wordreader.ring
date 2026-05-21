@@ -660,6 +660,11 @@ class WordReader
                 pos = tE
             else
                 # Paragraph comes first
+                # Handle self-closing <w:p .../> (empty para, no </w:p>)
+                if wrIsSelfClosingTag(bodyXml, pS)
+                    pos = wrSelfClosingEnd(bodyXml, pS)
+                    loop
+                ok
                 pE = wrFindCloseTag(bodyXml, "w:p", pS)
                 if pE = 0  break  ok
                 pXml = substr(bodyXml, pS, pE - pS)
@@ -2271,6 +2276,11 @@ class WordReader
                 cpS2 = wrFindFrom(tcXml, "<w:p ", cpPos)
                 cpS  = wrMinPos(cpS1, cpS2)
                 if cpS = 0  break  ok
+                # Handle self-closing <w:p .../> in table cell
+                if wrIsSelfClosingTag(tcXml, cpS)
+                    cpPos = wrSelfClosingEnd(tcXml, cpS)
+                    loop
+                ok
                 cpE = wrFindCloseTag(tcXml, "w:p", cpS)
                 if cpE = 0  break  ok
                 cpXml = substr(tcXml, cpS, cpE - cpS)
