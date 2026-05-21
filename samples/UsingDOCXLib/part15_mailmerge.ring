@@ -29,7 +29,7 @@ load "docxlib.ring"
 
 
 ? "==================================================="
-? "  DOCXLib v1.12.4 -- Merge & Data Table Demo"
+? "  DOCXLib -- Merge & Data Table Demo"
 ? "==================================================="
 ? ""
 
