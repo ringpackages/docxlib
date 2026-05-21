@@ -106,10 +106,10 @@ doc.addTable([
     :colWidths = [2, 4, 8, 2.5]
 ])
 
-if doc.save("demo_richcells_widths.docx")
-    ? "  Created: demo_richcells_widths.docx"
+if doc.save("demo_richcells3_widths.docx")
+    ? "  Created: demo_richcells3_widths.docx"
 else
-    ? "  FAILED: demo_richcells_widths.docx"
+    ? "  FAILED: demo_richcells3_widths.docx"
 ok
 
 # =====================================================================
@@ -160,10 +160,10 @@ doc.addTable([
     :cellVAlign = "top"
 ])
 
-if doc.save("demo_richcells_quotes.docx")
-    ? "  Created: demo_richcells_quotes.docx"
+if doc.save("demo_richcells3_quotes.docx")
+    ? "  Created: demo_richcells3_quotes.docx"
 else
-    ? "  FAILED: demo_richcells_quotes.docx"
+    ? "  FAILED: demo_richcells3_quotes.docx"
 ok
 
 # =====================================================================
@@ -223,10 +223,10 @@ doc.addTable([
     :cellVAlign = "top"
 ])
 
-if doc.save("demo_richcells_captions.docx")
-    ? "  Created: demo_richcells_captions.docx"
+if doc.save("demo_richcells3_captions.docx")
+    ? "  Created: demo_richcells3_captions.docx"
 else
-    ? "  FAILED: demo_richcells_captions.docx"
+    ? "  FAILED: demo_richcells3_captions.docx"
 ok
 
 # =====================================================================
@@ -332,10 +332,10 @@ doc.addTable([
     :colWidths = [1.2, 3.5, 9.5, 2.3]
 ])
 
-if doc.save("demo_richcells_report.docx")
-    ? "  Created: demo_richcells_report.docx"
+if doc.save("demo_richcells3_report.docx")
+    ? "  Created: demo_richcells3_report.docx"
 else
-    ? "  FAILED: demo_richcells_report.docx"
+    ? "  FAILED: demo_richcells3_report.docx"
 ok
 
 ? ""
