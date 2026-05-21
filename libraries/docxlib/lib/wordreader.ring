@@ -3681,15 +3681,17 @@ class WordReader
 
     func appendTable rowsData, colWidthsCm
         /*  rowsData   : list of rows; each row is a list of strings.
-            colWidthsCm: list of column widths in cm (converted to twips).
-            Row 1 is treated as a header row.  */
+            colWidthsCm: list of column widths in cm.
+            Row 1 is treated as a header row.
+            NOTE: colWidths are stored in cm (not twips) to match the format
+            used by the parser and expected by toWriter -> addTable.  */
         if !isList(rowsData) or len(rowsData) = 0  return self  ok
-        # Convert cm widths to twips
+        # Store cm widths as-is (toWriter passes them to addTable which converts cm->twips)
         colWidths = []
         if isList(colWidthsCm)
             for w in colWidthsCm
                 if isNumber(w)
-                    colWidths + floor(w * 567)
+                    colWidths + w
                 ok
             next
         ok
