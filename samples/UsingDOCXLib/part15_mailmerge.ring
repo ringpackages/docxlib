@@ -193,7 +193,7 @@ doc.setMergeTemplate([
     [:type = "emptyline"],
     [:type = "paragraph", :text = "Yours sincerely,"],
     [:type = "emptyline"],
-    [:type = "paragraph", :text = "Professor Mahmoud Fayed",
+    [:type = "paragraph", :text = "Mahmoud",
      :options = [:bold = true]],
     [:type = "paragraph", :text = "Director, {{ProgramName}}"]
 ])
