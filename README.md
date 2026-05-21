@@ -6,40 +6,40 @@
 
 ## Table of Contents
 
-1. [Introduction](#1-introduction)
-2. [Document Setup](#2-document-setup)
-3. [Headers, Footers, and Page Numbers](#3-headers-footers-and-page-numbers)
-4. [Text and Paragraphs](#4-text-and-paragraphs)
-5. [Lists](#5-lists)
-6. [Tables](#6-tables)
-7. [Images](#7-images)
-8. [Text Watermarks](#8-text-watermarks)
-9. [Page Borders and Background](#9-page-borders-and-background)
-10. [Footnotes and Endnotes](#10-footnotes-and-endnotes)
-11. [Hyperlinks, Bookmarks, and Cross-References](#11-hyperlinks-bookmarks-and-cross-references)
-12. [Table of Contents](#12-table-of-contents)
-13. [Captions and Lists of Figures / Tables](#13-captions-and-lists-of-figures--tables)
-14. [Tab Stops and Line Numbers](#14-tab-stops-and-line-numbers)
-15. [Comments](#15-comments)
-16. [Mail Merge Fields](#16-mail-merge-fields)
-17. [Content Controls](#17-content-controls)
-18. [Drawing Shapes](#18-drawing-shapes)
-19. [Text Boxes](#19-text-boxes)
-20. [RTL Support](#20-rtl-support)
-21. [Saving the Document](#21-saving-the-document)
-22. [Native OOXML Charts](#22-native-ooxml-charts)
-23. [Complete Example](#23-complete-example)
-24. [Mail Merge Template Engine](#24-mail-merge-template-engine)
-25. [Chart Data Tables](#25-chart-data-tables)
-26. [Introduction to WordReader](#27-introduction-to-wordreader)
-27. [Loading and Saving](#28-loading-and-saving)
-28. [Document Properties](#29-document-properties)
-29. [Content Query Methods](#30-content-query-methods)
-30. [Table Query Methods](#31-table-query-methods)
-31. [Image Query Methods](#32-image-query-methods)
-32. [Section and Layout Queries](#33-section-and-layout-queries)
-33. [Round-Trip: toWriter()](#34-round-trip-towriter)
-34. [Reader Quick Reference](#35-reader-quick-reference)
+* [1. Introduction](#1-introduction)
+* [2. Document Setup](#2-document-setup)
+* [3. Headers, Footers, and Page Numbers](#3-headers-footers-and-page-numbers)
+* [4. Text and Paragraphs](#4-text-and-paragraphs)
+* [5. Lists](#5-lists)
+* [6. Tables](#6-tables)
+* [7. Images](#7-images)
+* [8. Text Watermarks](#8-text-watermarks)
+* [9. Page Borders and Background](#9-page-borders-and-background)
+* [10. Footnotes and Endnotes](#10-footnotes-and-endnotes)
+* [11. Hyperlinks, Bookmarks, and Cross-References](#11-hyperlinks-bookmarks-and-cross-references)
+* [12. Table of Contents](#12-table-of-contents)
+* [13. Captions and Lists of Figures / Tables](#13-captions-and-lists-of-figures--tables)
+* [14. Tab Stops and Line Numbers](#14-tab-stops-and-line-numbers)
+* [15. Comments](#15-comments)
+* [16. Mail Merge Fields](#16-mail-merge-fields)
+* [17. Content Controls](#17-content-controls)
+* [18. Drawing Shapes](#18-drawing-shapes)
+* [19. Text Boxes](#19-text-boxes)
+* [20. RTL Support](#20-rtl-support)
+* [21. Saving the Document](#21-saving-the-document)
+* [22. Native OOXML Charts](#22-native-ooxml-charts)
+* [23. Complete Example](#23-complete-example)
+* [24. Mail Merge Template Engine](#24-mail-merge-template-engine)
+* [25. Chart Data Tables](#25-chart-data-tables)
+* [26. Introduction to WordReader](#26-introduction-to-wordreader)
+* [27. Loading and Saving](#27-loading-and-saving)
+* [28. Document Properties](#28-document-properties)
+* [29. Content Query Methods](#29-content-query-methods)
+* [30. Table Query Methods](#30-table-query-methods)
+* [31. Image Query Methods](#31-image-query-methods)
+* [32. Section and Layout Queries](#32-section-and-layout-queries)
+* [33. Round-Trip: toWriter()](#33-round-trip-towriter)
+* [34. Reader Quick Reference](#34-reader-quick-reference)
 
 ---
 
@@ -110,6 +110,7 @@ content.
 | `setTitle()` | `title : String` | Sets the document title (written to core.xml) |
 | `setAuthor()` | `author : String` | Sets the document author (written to core.xml) |
 | `setDefaultFont()` | `fontName, fontSize` | Body font and size in pt. Defaults: Calibri, 11pt |
+| `addCustomProperty()` | `name, value` | Add a custom document property (written to custom.xml) |
 
 ### 2.2 Page Size and Orientation
 
@@ -582,6 +583,38 @@ colHdr2.setTextDir("tbRl")
 
 ### 6.5 Conditional Table Formatting
 
+Conditional rules apply per-cell background colour, text colour, and bold weight based
+on the cell's value. Rules are evaluated in order; a later rule overrides an earlier one
+for the same cell. The header row is never subject to conditional formatting.
+
+Pass rules via the `:conditionalRules` option in `addTable()`:
+
+| Rule key | Type | Description |
+|---|---|---|
+| `:col` | Number | 1-based column index to test; `0` = test all columns |
+| `:condition` | String | `"lt"`, `"lte"`, `"gt"`, `"gte"`, `"eq"`, `"neq"`, `"between"`, `"contains"` |
+| `:value` | Number / String | Threshold or comparison value |
+| `:value2` | Number | Upper bound for `"between"` |
+| `:bgColor` | String | Background colour hex applied when rule matches |
+| `:textColor` | String | Text colour hex applied when rule matches (optional) |
+| `:bold` | true/false | Bold weight applied when rule matches (optional) |
+
+```ring
+doc.addTable(data, [
+    :headerRow   = true,
+    :borderStyle = "single",
+    :colWidths   = [4, 3, 3],
+    :conditionalRules = [
+        # Column 2 negative values → red background
+        [:col=2, :condition="lt",       :value=0,    :bgColor="FDECEA", :textColor="C00000"],
+        # Column 2 high values → green background
+        [:col=2, :condition="gte",      :value=90,   :bgColor="E2EFDA", :textColor="375623"],
+        # Any column containing "FAIL" → yellow + bold
+        [:col=0, :condition="contains", :value="FAIL", :bgColor="FFF2CC", :bold=true]
+    ]
+])
+```
+
 ---
 
 ## 7. Images
@@ -590,12 +623,14 @@ colHdr2.setTextDir("tbRl")
 
 | Method | Parameters | Description |
 |---|---|---|
-| `addImage()` | `imagePath, widthCm, heightCm, options` | Inline image, left-aligned |
-| `addImageCentered()` | `imagePath, widthCm, heightCm, options` | Inline image, centred on page |
+| `addImage()` | `imagePath, widthCm, heightCm` | Inline image, left-aligned |
+| `addImageCentered()` | `imagePath, widthCm, heightCm` | Inline image, centred on page |
+| `addImageWithOptions()` | `imagePath, widthCm, heightCm, options` | Inline image, left-aligned, with options |
+| `addImageCenteredWithOptions()` | `imagePath, widthCm, heightCm, options` | Inline image, centred, with options |
 
-Supported formats: PNG, JPG/JPEG, GIF, BMP. Pass `[]` for `options` when no options are needed.
+Supported formats: PNG, JPG/JPEG, GIF, BMP.
 
-**Image options:**
+**Image options** (used with `addImageWithOptions()` and `addImageCenteredWithOptions()`):
 
 | Option | Type | Description |
 |---|---|---|
@@ -607,16 +642,19 @@ Supported formats: PNG, JPG/JPEG, GIF, BMP. Pass `[]` for `options` when no opti
 
 ```ring
 # Basic inline image
-doc.addImage("logo.png", 5, 3, [])
-doc.addImageCentered("chart.png", 12, 8, [:altText="Benchmark chart"])
+doc.addImage("logo.png", 5, 3)
+doc.addImageCentered("chart.png", 12, 8)
+
+# With options (altText, crop)
+doc.addImageCenteredWithOptions("chart.png", 12, 8, [:altText="Benchmark chart"])
 
 # Crop: remove 15% from each side, 10% from top (non-destructive)
-doc.addImageCentered("photo.jpg", 12, 8, [
+doc.addImageCenteredWithOptions("photo.jpg", 12, 8, [
     :cropLeft = 15, :cropRight = 15, :cropTop = 10
 ])
 
 # Centre punch-out — shows only the inner 60×60% of the image
-doc.addImage("landscape.png", 10, 6, [
+doc.addImageWithOptions("landscape.png", 10, 6, [
     :cropLeft=20, :cropRight=20, :cropTop=20, :cropBottom=20
 ])
 ```
@@ -1701,6 +1739,9 @@ doc.setChartDefaults([
 # Every subsequent chart automatically gets a data table
 doc.addColumnChart("Revenue", quarters, series, [])
 doc.addLineChart("Trend", months, trendSeries, [:smooth = true])
+
+# Remove all chart defaults
+doc.clearChartDefaults()
 ```
 
 ---
