@@ -29,7 +29,7 @@ load "docxlib.ring"
 # =============================================================================
 # STEP 1 -- Generate the source document
 # =============================================================================
-? "STEP 1: Generating source document (wordreader_source.docx) ..."
+? "STEP 1: Generating source document (demo_wordreader_source.docx) ..."
 
 src = new WordWriter()
 src.setTitle("Ring Technology -- Product Catalogue 2024")
@@ -156,7 +156,7 @@ src.save("demo_wordreader_source.docx")
 # STEP 2 -- Open with WordReader and print summary
 # =============================================================================
 ? "STEP 2: Opening with WordReader ..."
-wr = new WordReader("wordreader_source.docx")
+wr = new WordReader("demo_wordreader_source.docx")
 ? wr.summary()
 
 # =============================================================================
@@ -303,7 +303,7 @@ wr.appendParagraph(
 # =============================================================================
 # STEP 5 -- Save the modified document
 # =============================================================================
-? "STEP 5: Saving modified document (wordreader_modified.docx) ..."
+? "STEP 5: Saving modified document (demo_wordreader_modified.docx) ..."
 wr.save("demo_wordreader_modified.docx")
 wr.cleanup()
 ? "  Saved and temp files cleaned up."
@@ -313,7 +313,7 @@ wr.cleanup()
 # STEP 6 -- Re-read the saved file to verify round-trip
 # =============================================================================
 ? "STEP 6: Re-reading modified document to verify round-trip ..."
-wr2 = new WordReader("wordreader_modified.docx")
+wr2 = new WordReader("demo_wordreader_modified.docx")
 ? wr2.summary()
 
 ? "--- Verification checks ---"
