@@ -2,17 +2,16 @@
 
 **Word Document Generation and Reading Library for the Ring Programming Language**
 
-## Introduction
+## Overview
 
 DOCXLib is a **pure-Ring** library for generating and reading Microsoft Word (`.docx`)
 documents programmatically — no external tools, no COM automation, no Office installation
 required. 
 
-### Key Features
+### Features
 
 * **Zero dependencies** — Pure Ring
 * **Fluent API** — Every method returns `self`, enabling method chaining
-* **OOXML compliant** — Files open without repair warnings in Word 2016–365
 * **Rich tables** — Cell merging, per-side borders, row heights, text direction, images, lists inside cells
 * **Full typography** — Bold/italic/colour/font/size per run, language tags, character styles, custom paragraph styles
 * **Paragraph control** — Widow/orphan control, hyphenation suppression, keep-together, contextual spacing
