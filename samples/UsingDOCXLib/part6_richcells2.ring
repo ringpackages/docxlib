@@ -131,7 +131,7 @@ doc.addTable([
     :cellVAlign = "top"
 ])
 
-if doc.save("demo_richcells2__numbered.docx")
+if doc.save("demo_richcells2_numbered.docx")
     ? "  Created: demo_richcells2__numbered.docx"
 else
     ? "  FAILED: demo_richcells2_numbered.docx"
@@ -279,7 +279,7 @@ doc.addTable([
     :cellVAlign = "top"
 ])
 
-if doc.save("demo_richcells2__nested_tables.docx")
+if doc.save("demo_richcells2_nested_tables.docx")
     ? "  Created: demo_richcells2_nested_tables.docx"
 else
     ? "  FAILED: demo_richcells2_nested_tables.docx"
@@ -319,14 +319,14 @@ h2 = wordCell("Details", [:bold = true, :color = "white", :bgColor = "4A148C", :
 
 # Row: Rich content cell
 overview = new WordCell()
-overview.addRun("Ring 1.22", [:bold = true, :size = 14, :color = "4A148C"])
+overview.addRun("Ring 1.26", [:bold = true, :size = 14, :color = "4A148C"])
 overview.addLineBreak()
 overview.addRun("Latest Release", [:italic = true, :color = "gray"])
 overview.setVerticalAlign("center")
 overview.setAlign("center")
 
 details = new WordCell()
-details.addRun("Ring 1.22 is the latest release with many improvements.", [])
+details.addRun("Ring 1.26 is the latest release with many improvements.", [])
 details.addLineBreak()
 details.addLineBreak()
 details.addRun("Key Highlights:", [:bold = true])
@@ -348,7 +348,7 @@ doc.addTable([
     :cellVAlign = "top"
 ])
 
-if doc.save("demo_richcells2__mixed.docx")
+if doc.save("demo_richcells2_mixed.docx")
     ? "  Created: demo_richcells2_mixed.docx"
 else
     ? "  FAILED: demo_richcells2_mixed.docx"
