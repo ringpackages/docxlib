@@ -922,9 +922,7 @@ class WordReader
 
                 if !isTOCPara and !isMergePara and !isFieldPara2
                     pBlock = parseParagraph(pXml)
-                    if pBlock[:type] != "empty"
-                        aBlocks + pBlock
-                    ok
+                    aBlocks + pBlock   # keep empty paras for layout fidelity
                 ok
                 pos = pE
             ok
@@ -4350,7 +4348,11 @@ class WordReader
                 ok
             next
 
-            if bType = "heading"
+            if bType = "empty"
+                # Empty paragraph - reproduce as blank line for layout fidelity
+                writer.addParagraph("", [])
+
+            elseif bType = "heading"
                 bm = block[:bookmark]
                 if bm != NULL and len(bm) > 0  writer.addBookmark(bm)  ok
                 runs = block[:runs]
