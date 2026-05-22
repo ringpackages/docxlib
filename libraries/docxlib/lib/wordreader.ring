@@ -679,6 +679,26 @@ class WordReader
                 if wrIsSelfClosingTag(pXml, 1)
                     loop
                 ok
+                # Intercept TOC field paragraphs
+                isTOCPara = false
+                if wrFindFrom(pXml, "instrText", 1) > 0 and wrFindFrom(pXml, "MERGEFIELD", 1) = 0
+                    itS3 = wrFindFrom(pXml, "<w:instrText", 1)
+                    if itS3 > 0
+                        itE3 = wrFindFrom(pXml, "</w:instrText>", itS3)
+                        if itE3 > 0
+                            itTxt3 = substr(pXml, itS3, itE3 - itS3)
+                            if wrFindFrom(itTxt3, " TOC ", 1) > 0
+                                isTOCPara = true
+                                tocBlock3 = []
+                                tocBlock3[:type]     = "toc"
+                                tocBlock3[:title]    = cSrcTOCTitle
+                                tocBlock3[:bookmark] = ""
+                                aBlocks + tocBlock3
+                            ok
+                        ok
+                    ok
+                ok
+
                 # Intercept MERGEFIELD paragraphs
                 isMergePara = false
                 isFieldPara2 = false
@@ -762,7 +782,7 @@ class WordReader
                         aBlocks + mfBlock
                     ok
                 ok
-                if !isMergePara and !isFieldPara2
+                if !isMergePara and !isFieldPara2 and !isTOCPara
                     pBlock = parseParagraph(pXml)
                     aBlocks + pBlock
                 ok
@@ -1869,6 +1889,11 @@ class WordReader
         block[:text]            = fullText
         block[:runs]            = aRuns
         block[:style]           = styleName
+        # TOCHeading paragraphs: mark as tocheading so toWriter can skip
+        # (addTOC() will add its own heading with the correct title)
+        if styleName = "TOCHeading"
+            block[:type] = "tocheading"
+        ok
         block[:align]           = alignVal
         block[:spaceBefore]     = spaceBefore
         block[:spaceAfter]      = spaceAfter

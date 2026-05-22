@@ -3325,11 +3325,9 @@ class WordWriter
             styleId = options[:style]
         ok
         
-        # Paragraph properties
+        # Paragraph properties (generateParagraphProperties handles :style)
         pPr = generateParagraphProperties(options)
-        if styleId != NULL
-            xml_ += '<w:pPr><w:pStyle w:val="' + styleId + '"/>' + pPr + '</w:pPr>'
-        elseif len(pPr) > 0
+        if len(pPr) > 0
             xml_ += '<w:pPr>' + pPr + '</w:pPr>'
         ok
 

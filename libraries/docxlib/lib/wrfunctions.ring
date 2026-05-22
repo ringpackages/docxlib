@@ -911,9 +911,46 @@ func wrDetectTOC bodyXml
     /*
         Detect if bodyXml contains a Table of Contents field (TOC instrText).
         Returns [:found, :title]
+        Extracts the actual TOCHeading title text if present.
     */
     result = [:found=false, :title="Table of Contents"]
-    # Check for TOC instrText
+    # Extract TOCHeading title: find the style reference, then locate its paragraph
+    tchStylePos = wrFindFrom(bodyXml, "TOCHeading", 1)
+    if tchStylePos > 0
+        result[:found] = true
+        # The TOCHeading pStyle is inside a <w:pPr> which is inside a <w:p>.
+        # Find </w:p> end of this paragraph (search forward from tchStylePos)
+        tchPEnd = wrFindFrom(bodyXml, "</w:p>", tchStylePos)
+        if tchPEnd > 0
+            # Find the <w:p> start by searching backward for "<w:p>" or "<w:p "
+            # We scan backward from tchStylePos to find the nearest <w:p start
+            tchSearch = tchStylePos
+            tchPStart = 0
+            while tchSearch > 4
+                tchSearch--
+                c1 = substr(bodyXml, tchSearch, 4)
+                if c1 = "<w:p"
+                    tchPStart = tchSearch
+                    exit
+                ok
+            end
+            if tchPStart > 0
+                tchPXml = substr(bodyXml, tchPStart, tchPEnd - tchPStart + 6)
+                # Extract text from <w:t> in this paragraph
+                tchTStart = wrFindFrom(tchPXml, "<w:t>", 1)
+                if tchTStart = 0  tchTStart = wrFindFrom(tchPXml, "<w:t ", 1)  ok
+                if tchTStart > 0
+                    tchTEnd = wrFindFrom(tchPXml, "</w:t>", tchTStart)
+                    tchTGt  = wrFindFrom(tchPXml, ">", tchTStart)
+                    if tchTGt > 0 and tchTEnd > 0
+                        tchTitle = substr(tchPXml, tchTGt+1, tchTEnd - tchTGt - 1)
+                        if len(tchTitle) > 0  result[:title] = tchTitle  ok
+                    ok
+                ok
+            ok
+        ok
+    ok
+    # Also check for TOC instrText field
     itS = wrFindFrom(bodyXml, "instrText", 1)
     while itS > 0
         itE = wrFindFrom(bodyXml, "</w:instrText>", itS)
@@ -926,10 +963,6 @@ func wrDetectTOC bodyXml
         ok
         itS = wrFindFrom(bodyXml, "instrText", itS+1)
     end
-    # Also check for TOCHeading paragraph style
-    if wrFindFrom(bodyXml, "TOCHeading", 1) > 0
-        result[:found] = true
-    ok
     return result
 
 
