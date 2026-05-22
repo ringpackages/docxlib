@@ -70,6 +70,8 @@ class WordWriter
     nPageWidth          # Page width in twips
     nDocSpacingAfter    # Document default paragraph space-after (twips)
     nHeaderMarginTwips  # Header margin in twips
+    cSrcStylesXml       # Source styles.xml (use verbatim for round-trip)
+    cSrcThemeXml        # Source theme1.xml (use verbatim for round-trip)
     nFooterMarginTwips  # Footer margin in twips
     nDocSpacingLine     # Document default line height (twips)
     nPageHeight         # Page height in twips
@@ -196,6 +198,8 @@ class WordWriter
         nDefaultSize = 11
         nDocSpacingAfter = 200   # twips: document default para space-after
         nHeaderMarginTwips = 720  # default header margin
+        cSrcStylesXml = ""
+        cSrcThemeXml  = ""
         nFooterMarginTwips = 720  # default footer margin
         nDocSpacingLine  = 276   # twips: document default line height
         cHeaderText = ""
@@ -353,6 +357,16 @@ class WordWriter
         
         return self
     
+    func useSourceStyles stylesXml
+        /*  Use source styles.xml verbatim for round-trip fidelity.  */
+        cSrcStylesXml = stylesXml
+        return self
+
+    func useSourceTheme themeXml
+        /*  Use source theme1.xml verbatim for round-trip fidelity.  */
+        cSrcThemeXml = themeXml
+        return self
+
     func setHeaderFooterMargins headerTwips, footerTwips
         /*  Set header/footer margins (twips) from source document.  */
         nHeaderMarginTwips = headerTwips
@@ -2713,7 +2727,9 @@ class WordWriter
         ok
 
         # Write theme if active 
-        if len(cThemeName) > 0
+        saveThemeName   = cThemeName    
+        saveSrcThemeXml = cSrcThemeXml  
+        if len(saveThemeName) > 0 or len(saveSrcThemeXml) > 0
             writeTheme(tempDir)
         ok
         
@@ -2794,6 +2810,8 @@ class WordWriter
     private
     
     func writeContentTypes tempDir
+        wctSrcThemeXml = cSrcThemeXml   
+        wctThemeName   = cThemeName
         c = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         c += '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
         c += '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
@@ -2886,7 +2904,7 @@ class WordWriter
         if len(aComments) > 0
             c += '<Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>'
         ok
-        if len(cThemeName) > 0
+        if len(wctThemeName) > 0 or len(wctSrcThemeXml) > 0
             c += '<Override PartName="/word/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
         ok
 
@@ -4962,7 +4980,31 @@ class WordWriter
         # Capture member vars for use in this method (Ring dynamic scope safety)
         wsDocSpacingAfter = nDocSpacingAfter
         wsDocSpacingLine  = nDocSpacingLine
+        wsSrcStylesXml    = cSrcStylesXml
         
+        # === Round-trip: use source styles.xml verbatim when available ===
+        if len(wsSrcStylesXml) > 0
+            c = wsSrcStylesXml
+            # Ensure TableGrid has the spacing pPr fix (may be missing in source)
+            tgS = wrFindFrom(c, 'styleId="TableGrid"', 1)
+            if tgS > 0
+                tgE = wrFindFrom(c, "</w:style>", tgS)
+                if tgE > 0
+                    tgBlock = substr(c, tgS, tgE - tgS + 10)
+                    if wrFindFrom(tgBlock, "<w:pPr>", 1) = 0
+                        tgPPr = '<w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
+                        tgTblPrPos = wrFindFrom(tgBlock, "<w:tblPr>", 1)
+                        if tgTblPrPos > 0
+                            newTgBlock = substr(tgBlock, 1, tgTblPrPos-1) + tgPPr + substr(tgBlock, tgTblPrPos)
+                            c = substr(c, 1, tgS-1) + newTgBlock + substr(c, tgS + len(tgBlock))
+                        ok
+                    ok
+                ok
+            ok
+            write(tempDir + "word" + sep + "styles.xml", c)
+            return
+        ok
+
         c = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         c += '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
         
@@ -6369,8 +6411,16 @@ class WordWriter
     func writeTheme tempDir
         /*
             Write word/theme/theme1.xml using the active theme color palette.
+            When cSrcThemeXml is set (round-trip), use it verbatim.
         */
         sep = wordGetSep()
+        wsSrcThemeXml = cSrcThemeXml   # capture for Ring dynamic scope
+        # Use source theme verbatim for round-trip fidelity
+        if len(wsSrcThemeXml) > 0
+            wordMakeDir(tempDir + "word" + sep + "theme")
+            write(tempDir + "word" + sep + "theme" + sep + "theme1.xml", wsSrcThemeXml)
+            return
+        ok
         dk1  = aThemeColors[1]
         lt1  = aThemeColors[2]
         dk2  = aThemeColors[3]
@@ -7494,7 +7544,9 @@ class WordWriter
         ok
 
         # Add theme if active 
-        if len(cThemeName) > 0
+        flSrcThemeXml = cSrcThemeXml   
+        flThemeName   = cThemeName
+        if len(flThemeName) > 0 or len(flSrcThemeXml) > 0
             filesList + ["word/theme/theme1.xml", read(tempDir + "word" + sep + "theme" + sep + "theme1.xml")]
         ok
         

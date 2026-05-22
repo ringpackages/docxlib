@@ -31,6 +31,8 @@ class WordReader
     nPageHeight
     nDocSpacingAfter        # Source document default para space-after (twips)
     nDocSpacingLine         # Source document default line height (twips)
+    cSrcStylesXml           # Source styles.xml content for round-trip
+    cSrcThemeXml            # Source theme1.xml content for round-trip
     nHeaderMargin           # Source document header margin (twips)
     nFooterMargin           # Source document footer margin (twips)
     nMarginTop
@@ -95,6 +97,8 @@ class WordReader
         nDefaultSize = 11
         nDocSpacingAfter = -1   # -1 = not found in source
         nDocSpacingLine  = -1
+        cSrcStylesXml = ""
+        cSrcThemeXml  = ""
         nPageWidth   = 12240
         nPageHeight  = 15840
         nMarginTop    = 1440
@@ -182,7 +186,10 @@ class WordReader
 
         # Read styles.xml
         styPath = cTempDir + "word" + sep + "styles.xml"
-        if fexists(styPath)  cStylesXml = read(styPath)  ok
+        if fexists(styPath)
+            cStylesXml    = read(styPath)
+            cSrcStylesXml = cStylesXml   # keep verbatim for round-trip
+        ok
 
         # Read relationships
         relsPath = cTempDir + "word" + sep + "_rels" + sep + "document.xml.rels"
@@ -436,6 +443,10 @@ class WordReader
         ok
 
         # Document RTL - check settings.xml
+        # Read theme1.xml for round-trip fidelity
+        themePath = cTempDir + "word" + sep + "theme" + sep + "theme1.xml"
+        if fexists(themePath)  cSrcThemeXml = read(themePath)  ok
+
         settPath = cTempDir + "word" + sep + "settings.xml"
         if fexists(settPath)
             settXml = read(settPath)
@@ -4235,6 +4246,9 @@ class WordReader
         if nDocSpacingAfter >= 0 and nDocSpacingLine > 0
             writer.setDocDefaultSpacing(nDocSpacingAfter, nDocSpacingLine)
         ok
+        # Pass source styles.xml and theme1.xml for round-trip fidelity
+        if len(cSrcStylesXml) > 0  writer.useSourceStyles(cSrcStylesXml)  ok
+        if len(cSrcThemeXml)  > 0  writer.useSourceTheme(cSrcThemeXml)    ok
         if cSrcOrientation = "landscape"
             writer.setOrientation("landscape")
         ok
