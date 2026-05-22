@@ -947,7 +947,9 @@ class WordReader
                     isBlockQuote = true
                 else
                     if wrFindFrom(pPrXml, "<w:bottom ", 1) > 0 and
-                       wrFindFrom(pPrXml, "<w:left ",   1) = 0
+                       wrFindFrom(pPrXml, "<w:left ",   1) = 0 and
+                       wrFindFrom(pXml, "<w:t>", 1) = 0 and
+                       wrFindFrom(pXml, "<w:t ", 1) = 0
                         isHorizLine = true
                     ok
                 ok
@@ -4944,18 +4946,34 @@ class WordReader
                 if bm != NULL and len(bm) > 0  writer.addBookmark(bm)  ok
                 bt2 = block[:breakType]
                 if bt2 = NULL  bt2 = "nextPage"  ok
-                # pass column count if > 1
-                sbNC2 = block[:numColumns]
-                sbCS2 = block[:columnSpaceTwips]
-                if isNumber(sbNC2) and sbNC2 > 1
-                    sbOpts2 = []
-                    sbOpts2[:numColumns] = sbNC2
-                    if isNumber(sbCS2) and sbCS2 > 0
-                        sbOpts2[:columnSpaceCm] = sbCS2 / 567.0
+                # Look ahead: if a landscapestart follows, use addLandscapeStart()
+                # so the writer correctly inserts portrait sectPr before landscape
+                nextIsLandscape = false
+                for sbLook = blkIdx+1 to len(aBlocks)
+                    sbLookType = aBlocks[sbLook][:type]
+                    if sbLookType = "landscapestart"
+                        nextIsLandscape = true
+                        exit
+                    elseif sbLookType = "sectionbreak" or sbLookType = "pagebreak"
+                        exit
                     ok
-                    writer.addSectionBreak(bt2, sbOpts2)
+                next
+                if nextIsLandscape
+                    writer.addLandscapeStart()
                 else
-                    writer.addSectionBreak(bt2, [])
+                    # pass column count if > 1
+                    sbNC2 = block[:numColumns]
+                    sbCS2 = block[:columnSpaceTwips]
+                    if isNumber(sbNC2) and sbNC2 > 1
+                        sbOpts2 = []
+                        sbOpts2[:numColumns] = sbNC2
+                        if isNumber(sbCS2) and sbCS2 > 0
+                            sbOpts2[:columnSpaceCm] = sbCS2 / 567.0
+                        ok
+                        writer.addSectionBreak(bt2, sbOpts2)
+                    else
+                        writer.addSectionBreak(bt2, [])
+                    ok
                 ok
 
             elseif bType = "caption"
@@ -4983,7 +5001,9 @@ class WordReader
                 ok
 
             elseif bType = "landscapestart"
-                writer.addLandscapeStart()
+                # landscapestart block = sectPr{landscape} in source
+                # = end of landscape section -> call addLandscapeEnd()
+                writer.addLandscapeEnd()
 
             elseif bType = "landscapeend"
                 writer.addLandscapeEnd()
