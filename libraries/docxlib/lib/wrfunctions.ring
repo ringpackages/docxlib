@@ -7,19 +7,23 @@
 # ============================================================================
 
 func wrFindFrom str, sub, fromPos
-    /*  Find sub in str starting at fromPos (1-based). Returns position or 0.  */
+    /*  Find sub in str starting at fromPos (1-based). Returns position or 0.
+        Uses C-level substr(str, sub) for fast search by slicing from fromPos.  */
     if fromPos < 1  fromPos = 1  ok
     sLen = len(str)
     subLen = len(sub)
     if subLen = 0 or sLen = 0  return 0  ok
-    pos = fromPos
-    while pos <= sLen - subLen + 1
-        if substr(str, pos, subLen) = sub
-            return pos
-        ok
-        pos++
-    end
-    return 0
+    if fromPos > sLen  return 0  ok
+    if fromPos = 1
+        p = substr(str, sub)
+        if isString(p)  p = 0  ok
+        return p
+    ok
+    remaining = substr(str, fromPos)
+    p = substr(remaining, sub)
+    if isString(p)  return 0  ok
+    if p = 0  return 0  ok
+    return p + fromPos - 1
 
 func wrAttr xml, attr
     /*  Extract the value of attr="..." or attr='...' from an XML element string.  */
@@ -1593,6 +1597,56 @@ func wrLoadHeadersFooters wr
        wrFindFrom(finalSectXml, "<w:titlePg ", 1) > 0
         wr.bSrcFirstPageDifferent = true
     ok
+
+func wrSplitBodyElements bodyXml
+    /*
+        Split body XML into top-level elements (w:p, w:tbl, w:sdt) in a single
+        forward pass. Each call to wrFindCloseTag works on a progressively-shorter
+        remaining string, avoiding the O(n^2) cost of searching the full bodyXml.
+        Handles self-closing <w:p .../> paragraphs (skip them, they are empty).
+        Returns list of [:tag, :xml] pairs.
+    */
+    result = []
+    remaining = bodyXml
+    
+    while true
+        ps1 = wrFindFrom(remaining, "<w:p>",   1)
+        ps2 = wrFindFrom(remaining, "<w:p ",   1)
+        ts1 = wrFindFrom(remaining, "<w:tbl>", 1)
+        ts2 = wrFindFrom(remaining, "<w:tbl ", 1)
+        ss1 = wrFindFrom(remaining, "<w:sdt>", 1)
+        ss2 = wrFindFrom(remaining, "<w:sdt ", 1)
+        pS   = wrMinPos(ps1, ps2)
+        tS   = wrMinPos(ts1, ts2)
+        sdtS = wrMinPos(ss1, ss2)
+        
+        earliest = 0
+        eTag = ""
+        if pS   > 0 and (earliest = 0 or pS   < earliest)  earliest = pS;   eTag = "w:p"   ok
+        if tS   > 0 and (earliest = 0 or tS   < earliest)  earliest = tS;   eTag = "w:tbl" ok
+        if sdtS > 0 and (earliest = 0 or sdtS < earliest)  earliest = sdtS; eTag = "w:sdt" ok
+        
+        if earliest = 0  break  ok
+        
+        # Handle self-closing tags like <w:p .../> - skip them (empty paragraphs)
+        if wrIsSelfClosingTag(remaining, earliest)
+            scEnd = wrSelfClosingEnd(remaining, earliest)
+            if scEnd = 0  break  ok
+            # Include the self-closing para as an empty element
+            result + [:tag=eTag, :xml=substr(remaining, earliest, scEnd - earliest)]
+            remaining = substr(remaining, scEnd)
+            loop
+        ok
+        
+        eEnd = wrFindCloseTag(remaining, eTag, earliest)
+        if eEnd = 0  break  ok
+        
+        result + [:tag=eTag, :xml=substr(remaining, earliest, eEnd - earliest)]
+        
+        remaining = substr(remaining, eEnd)
+    end
+    return result
+
 
 func wrSaveWriter writer, outputPath
     writer.save(outputPath)

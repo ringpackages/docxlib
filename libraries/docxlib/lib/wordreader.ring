@@ -643,88 +643,50 @@ class WordReader
             aBlocks + tbBlock
         next
 
-        pos = 1
-        while true
-            # Find next <w:p>, <w:tbl>, or <w:sdt>
-            ps1 = wrFindFrom(bodyXml, "<w:p>",   pos)
-            ps2 = wrFindFrom(bodyXml, "<w:p ",   pos)
-            ts1 = wrFindFrom(bodyXml, "<w:tbl>", pos)
-            ts2 = wrFindFrom(bodyXml, "<w:tbl ", pos)
-            ss1 = wrFindFrom(bodyXml, "<w:sdt>", pos)
-            ss2 = wrFindFrom(bodyXml, "<w:sdt ", pos)
-            pS  = wrMinPos(ps1, ps2)
-            tS  = wrMinPos(ts1, ts2)
-            sdtS = wrMinPos(ss1, ss2)
+        # Use wrSplitBodyElements for O(n) body parsing (avoids O(n^2) search)
+        bodyElements = wrSplitBodyElements(bodyXml)
+        for elem in bodyElements
+            elemTag = elem[:tag]
+            elemXml = elem[:xml]
 
-            if pS = 0 and tS = 0 and sdtS = 0  break  ok
-
-            # SDT block comes before p/tbl?
-            if sdtS > 0
-                doSDT = false
-                if pS = 0 and tS = 0  doSDT = true  ok
-                if pS > 0 and sdtS < pS  doSDT = true  ok
-                if tS > 0 and sdtS < tS  doSDT = true  ok
-                if doSDT
-                    sdtE = wrFindCloseTag(bodyXml, "w:sdt", sdtS)
-                    if sdtE > 0
-                        sdtXml = substr(bodyXml, sdtS, sdtE - sdtS)
-                        sdtInfo = wrParseSdtBlock(sdtXml)
-                        sdtType = sdtInfo[:type]
-                        if sdtType = "checkbox" or sdtType = "dropdown" or sdtType = "text"
-                            sdtBlock = []
-                            sdtBlock[:type]        = "formfield"
-                            sdtBlock[:fieldType]   = sdtType
-                            sdtBlock[:label]       = sdtInfo[:label]
-                            sdtBlock[:checked]     = sdtInfo[:checked]
-                            sdtBlock[:choices]     = sdtInfo[:choices]
-                            sdtBlock[:default]     = sdtInfo[:default]
-                            sdtBlock[:placeholder] = sdtInfo[:placeholder]
-                            sdtBlock[:bookmark]    = ""
-                            aBlocks + sdtBlock
-                        ok
-                        pos = sdtE
-                        loop
-                    ok
-                ok
-            ok
-
-            if pS = 0 and tS = 0  break  ok
-
-            if tS > 0 and (pS = 0 or tS < pS)
-                # Table comes first
-                tE = wrFindCloseTag(bodyXml, "w:tbl", tS)
-                if tE = 0  break  ok
-                tblXml = substr(bodyXml, tS, tE - tS)
-                tblBlock = parseTable(tblXml)
+            if elemTag = "w:tbl"
+                tblBlock = parseTable(elemXml)
                 aBlocks + tblBlock
-                pos = tE
+            elseif elemTag = "w:sdt"
+                sdtInfo = wrParseSdtBlock(elemXml)
+                sdtType = sdtInfo[:type]
+                if sdtType = "checkbox" or sdtType = "dropdown" or sdtType = "text"
+                    sdtBlock = []
+                    sdtBlock[:type]        = "formfield"
+                    sdtBlock[:fieldType]   = sdtType
+                    sdtBlock[:label]       = sdtInfo[:label]
+                    sdtBlock[:checked]     = sdtInfo[:checked]
+                    sdtBlock[:choices]     = sdtInfo[:choices]
+                    sdtBlock[:default]     = sdtInfo[:default]
+                    sdtBlock[:placeholder] = sdtInfo[:placeholder]
+                    sdtBlock[:bookmark]    = ""
+                    aBlocks + sdtBlock
+                ok
             else
-                # Paragraph comes first
-                # Handle self-closing <w:p .../> (empty para, no </w:p>)
-                if wrIsSelfClosingTag(bodyXml, pS)
-                    pos = wrSelfClosingEnd(bodyXml, pS)
+                # w:p paragraph
+                pXml = elemXml
+                # Handle self-closing <w:p .../> (empty para, no content)
+                if wrIsSelfClosingTag(pXml, 1)
                     loop
                 ok
-                pE = wrFindCloseTag(bodyXml, "w:p", pS)
-                if pE = 0  break  ok
-                pXml = substr(bodyXml, pS, pE - pS)
                 # Intercept MERGEFIELD paragraphs
                 isMergePara = false
+                isFieldPara2 = false
                 if wrFindFrom(pXml, "MERGEFIELD", 1) > 0 and wrFindFrom(pXml, "instrText", 1) > 0
                     mfFields = wrParseMergeFields(pXml)
                     if len(mfFields) > 0
                         isMergePara = true
-                        # Build mixed :runs list in document order:
-                        #   plain strings for literal <w:t> runs
-                        #   [:field="Name"] dicts for MERGEFIELD fields
-                        # We walk the XML scanning for <w:t>, <w:instrText>, <w:fldChar>
                         mfRuns = []
                         mfText = ""
                         mfScanPos = 1
-                        mfInField = false     # inside begin..separate zone
-                        mfInDisplay = false   # inside separate..end zone (skip display text)
+                        mfInField = false
+                        mfInDisplay = false
                         while true
-                            # Find next relevant tag
                             nT1  = wrFindFrom(pXml, "<w:t>",           mfScanPos)
                             nT2  = wrFindFrom(pXml, "<w:t ",           mfScanPos)
                             nIT  = wrFindFrom(pXml, "<w:instrText",    mfScanPos)
@@ -738,9 +700,7 @@ class WordReader
                                 if nMin = 0 or nFC < nMin  nMin = nFC  ok
                             ok
                             if nMin = 0  break  ok
-                            # Which tag is first?
                             if nFC = nMin
-                                # fldChar: extract fldCharType attribute
                                 fcEl = substr(pXml, nFC, 100)
                                 fcType = wrAttr(fcEl, "w:fldCharType")
                                 if fcType = "begin"
@@ -757,176 +717,52 @@ class WordReader
                                 if fcE = 0  break  ok
                                 mfScanPos = fcE + 1
                             elseif nIT = nMin
-                                # instrText: extract MERGEFIELD name
-                                itTagE = wrFindFrom(pXml, ">", nIT)
+                                itTagE   = wrFindFrom(pXml, ">", nIT)
                                 itEndTag = wrFindFrom(pXml, "</w:instrText>", nIT)
                                 if itTagE > 0 and itEndTag > 0
                                     itContent = trim(substr(pXml, itTagE+1, itEndTag-itTagE-1))
-                                    # itContent like " MERGEFIELD FirstName "
                                     mfIdx2 = wrFindFrom(itContent, "MERGEFIELD", 1)
                                     if mfIdx2 > 0
                                         mfNameRaw = trim(substr(itContent, mfIdx2 + 10))
-                                        # strip optional \* MERGEFORMAT or other switches
                                         spPos = wrFindFrom(mfNameRaw, " ", 1)
                                         if spPos > 0  mfNameRaw = substr(mfNameRaw, 1, spPos-1)  ok
-                                        mfNameRaw = trim(mfNameRaw)
-                                        mfRun = [:field = mfNameRaw]
-                                        add(mfRuns, mfRun)
+                                        if mfInField and len(mfNameRaw) > 0
+                                            if len(mfText) > 0
+                                                mfRuns + mfText
+                                                mfText = ""
+                                            ok
+                                            mfRuns + [:field=mfNameRaw]
+                                        ok
                                     ok
-                                    mfScanPos = itEndTag + 14
-                                else
-                                    mfScanPos = nIT + 10
                                 ok
+                                mfScanPos = itEndTag + 14
                             else
-                                # <w:t>: literal text run
-                                tTagE2 = wrFindFrom(pXml, ">", nT)
-                                tEnd2  = wrFindFrom(pXml, "</w:t>", tTagE2)
-                                if tTagE2 > 0 and tEnd2 > 0
-                                    tContent = wrXmlUnescape(substr(pXml, tTagE2+1, tEnd2-tTagE2-1))
-                                    if !mfInDisplay and !mfInField and len(tContent) > 0
-                                        # Literal text outside field markers
-                                        add(mfRuns, tContent)
+                                # w:t text
+                                tTagE = wrFindFrom(pXml, ">", nT)
+                                tEndTag = wrFindFrom(pXml, "</w:t>", tTagE)
+                                if tTagE > 0 and tEndTag > 0
+                                    tContent = substr(pXml, tTagE+1, tEndTag-tTagE-1)
+                                    if !mfInDisplay
                                         mfText += tContent
                                     ok
-                                    mfScanPos = tEnd2 + 6
-                                else
-                                    mfScanPos = nT + 4
                                 ok
+                                mfScanPos = tEndTag + 6
                             ok
                         end
+                        if len(mfText) > 0  mfRuns + mfText  ok
                         mfBlock = []
-                        mfBlock[:type]     = "mergefield"
-                        mfBlock[:fields]   = mfFields
-                        mfBlock[:runs]     = mfRuns
-                        mfBlock[:text]     = mfText
-                        mfBlock[:bookmark] = ""
+                        mfBlock[:type]      = "mergefield"
+                        mfBlock[:runs]      = mfRuns
+                        mfBlock[:bookmark]  = ""
                         aBlocks + mfBlock
-                        # Register unique field names globally
-                        for mfn in mfFields
-                            alreadyIn = false
-                            for ef in aMergeFields
-                                if ef = mfn  alreadyIn = true  ok
-                            next
-                            if !alreadyIn  aMergeFields + mfn  ok
-                        next
                     ok
                 ok
-
-                # Intercept TOC field paragraphs
-                isTOCPara = false
-                if wrFindFrom(pXml, "instrText", 1) > 0
-                    itS2 = wrFindFrom(pXml, "instrText", 1)
-                    itE2 = wrFindFrom(pXml, "</w:instrText>", itS2)
-                    if itE2 > 0
-                        itTxt2 = substr(pXml, itS2, itE2 - itS2)
-                        if wrFindFrom(itTxt2, " TOC ", 1) > 0 or wrFindFrom(itTxt2, "TOC ", 1) = 1
-                            isTOCPara = true
-                            # Emit one TOC block only
-                            bAlreadyHasTOC = false
-                            for chkBlk in aBlocks
-                                if chkBlk[:type] = "toc"  bAlreadyHasTOC = true  ok
-                            next
-                            if !bAlreadyHasTOC
-                                tocBlock = []
-                                tocBlock[:type]  = "toc"
-                                tocBlock[:title] = cSrcTOCTitle
-                                aBlocks + tocBlock
-                            ok
-                        ok
-                    ok
-                ok
-                # Also skip TOCHeading + TOC1..9 style paragraphs (TOC content lines)
-                if !isTOCPara
-                    pStyleS2 = wrFindFrom(pXml, "<w:pStyle ", 1)
-                    if pStyleS2 > 0
-                        pStyleEl2 = substr(pXml, pStyleS2, 80)
-                        pStyleV2  = wrAttr(pStyleEl2, "w:val")
-                        if pStyleV2 = "TOCHeading"  isTOCPara = true  ok
-                        if len(pStyleV2) >= 4 and left(pStyleV2, 3) = "TOC"
-                            restV = substr(pStyleV2, 4)
-                            if restV = "1" or restV = "2" or restV = "3" or
-                               restV = "4" or restV = "5" or restV = "6" or
-                               restV = "7" or restV = "8" or restV = "9"
-                                isTOCPara = true
-                            ok
-                        ok
-                    ok
-                ok
-
-                # Detect common field codes (DATE, AUTHOR, TITLE, FILENAME …) — v3k
-                isFieldPara2 = false
-                fldType2     = ""
-                fldResult2   = ""
-                if !isMergePara and !isTOCPara
-                    if wrFindFrom(pXml, "<w:instrText", 1) > 0
-                        itSF2    = wrFindFrom(pXml, "<w:instrText", 1)
-                        itTagEF2 = wrFindFrom(pXml, ">", itSF2)
-                        itEF2    = wrFindFrom(pXml, "</w:instrText>", itSF2)
-                        if itTagEF2 > 0 and itEF2 > 0 and itTagEF2 < itEF2
-                            instrContent2 = trim(substr(pXml, itTagEF2 + 1, itEF2 - itTagEF2 - 1))
-                            aKnownFlds = ["DATE", "CREATEDATE", "SAVEDATE", "AUTHOR", "TITLE",
-                                          "FILENAME", "SUBJECT", "KEYWORDS", "LASTSAVEDBY",
-                                          "NUMWORDS", "NUMCHARS", "NUMPAGES"]
-                            aKnownFldsLen = len(aKnownFlds)
-                            for kfIdx2 = 1 to aKnownFldsLen
-                                kf2 = aKnownFlds[kfIdx2]
-                                if left(instrContent2, len(kf2)) = kf2
-                                    fldType2     = kf2
-                                    isFieldPara2 = true
-                                    exit
-                                ok
-                                if wrFindFrom(instrContent2, " " + kf2, 1) > 0
-                                    fldType2     = kf2
-                                    isFieldPara2 = true
-                                    exit
-                                ok
-                            next
-                            if isFieldPara2
-                                # Extract result text between fldChar separate and end
-                                fSep2 = wrFindFrom(pXml, 'fldCharType="separate"', 1)
-                                fEnd2 = wrFindFrom(pXml, 'fldCharType="end"', 1)
-                                if fSep2 = 0
-                                    fSep2 = wrFindFrom(pXml, "fldCharType='separate'", 1)
-                                ok
-                                if fEnd2 = 0
-                                    fEnd2 = wrFindFrom(pXml, "fldCharType='end'", 1)
-                                ok
-                                if fSep2 > 0 and fEnd2 > 0 and fSep2 < fEnd2
-                                    betXml2 = substr(pXml, fSep2, fEnd2 - fSep2)
-                                    btPos2  = 1
-                                    while true
-                                        btS2a = wrFindFrom(betXml2, "<w:t>", btPos2)
-                                        btS2b = wrFindFrom(betXml2, "<w:t ", btPos2)
-                                        btS2  = wrMinPos(btS2a, btS2b)
-                                        if btS2 = 0  break  ok
-                                        btTgE2 = wrFindFrom(betXml2, ">", btS2)
-                                        btEnd2 = wrFindFrom(betXml2, "</w:t>", btTgE2)
-                                        if btTgE2 > 0 and btEnd2 > 0
-                                            fldResult2 += wrXmlUnescape(substr(betXml2, btTgE2+1, btEnd2-btTgE2-1))
-                                            btPos2 = btEnd2 + 6
-                                        else
-                                            break
-                                        ok
-                                    end
-                                ok
-                                fldBlock2 = []
-                                fldBlock2[:type]        = "field"
-                                fldBlock2[:fieldType]   = fldType2
-                                fldBlock2[:fieldResult] = fldResult2
-                                fldBlock2[:bookmark]    = ""
-                                aBlocks + fldBlock2
-                            ok
-                        ok
-                    ok
-                ok
-
-                if !isTOCPara and !isMergePara and !isFieldPara2
+                if !isMergePara and !isFieldPara2
                     pBlock = parseParagraph(pXml)
-                    aBlocks + pBlock   # keep empty paras for layout fidelity
+                    aBlocks + pBlock
                 ok
-                pos = pE
             ok
-        end
+        next
 
     func parseParagraph pXml
         block = []
@@ -1811,12 +1647,22 @@ class WordReader
             runPos = rEnd
         end
 
-        # Tab segments
+        # Tab segments - use wrFindFrom since Ring 1.27 lacks split()
         if len(aTabStops) > 0
-            segs = split(fullText, char(9))
-            for seg in segs
-                aTabSegments + seg
-            next
+            tabSep = char(9)
+            tabPos = 1
+            tabLen = len(fullText)
+            while tabPos <= tabLen
+                tabP2 = wrFindFrom(fullText, tabSep, tabPos)
+                if tabP2 = 0
+                    if tabPos <= tabLen
+                        aTabSegments + substr(fullText, tabPos, tabLen - tabPos + 1)
+                    ok
+                    exit
+                ok
+                aTabSegments + substr(fullText, tabPos, tabP2 - tabPos)
+                tabPos = tabP2 + 1
+            end
         ok
 
         # --- Block assembly ---
