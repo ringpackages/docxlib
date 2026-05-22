@@ -337,6 +337,11 @@ class WordReader
                                 if len(spDAv) > 0  nDocSpacingAfter = number(spDAv)  ok
                                 if len(spDLv) > 0  nDocSpacingLine  = number(spDLv)   ok
                             ok
+                            # Detect document-level RTL from pPrDefault <w:bidi/>
+                            if wrFindFrom(pprdXml, "<w:bidi/>", 1) > 0 or
+                               wrFindFrom(pprdXml, "<w:bidi ",  1) > 0
+                                bSrcDocumentRTL = true
+                            ok
                         ok
                     ok
                 ok
@@ -4182,9 +4187,10 @@ class WordReader
 
         # Page border
         if bSrcPageBorder
+            # nSrcPageBorderSize is in eighths-of-point; setPageBorder expects points
             writer.setPageBorder([:style=cSrcPageBorderStyle,
                                    :color=cSrcPageBorderColor,
-                                   :size=nSrcPageBorderSize,
+                                   :size=nSrcPageBorderSize/8.0,
                                    :space=nSrcPageBorderSpace])
         ok
 
