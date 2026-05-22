@@ -3153,6 +3153,7 @@ class WordReader
             runs = block[:runs]
             if !isList(runs)  loop  ok
             for run in runs
+                if !isList(run)  loop  ok
                 if run[:vanish] = true
                     result + [:blockIndex=i, :text=run[:text], :blockType=block[:type]]
                 ok
@@ -3167,6 +3168,7 @@ class WordReader
             runs = block[:runs]
             if !isList(runs)  loop  ok
             for run in runs
+                if !isList(run)  loop  ok
                 if run[:caps] = true
                     result + [:text=run[:text], :type="caps"]
                 elseif run[:smallCaps] = true
@@ -3183,6 +3185,7 @@ class WordReader
             runs = block[:runs]
             if !isList(runs)  loop  ok
             for run in runs
+                if !isList(run)  loop  ok
                 if run[:dstrike] = true  result + run[:text]  ok
             next
         next
@@ -4357,6 +4360,7 @@ class WordReader
                 if isList(runs) and len(runs) > 1
                     wrRuns = []
                     for run in runs
+                        if !isList(run)  loop  ok
                         rOpts2 = []
                         if run[:bold]      = true  rOpts2[:bold]      = true  ok
                         if run[:italic]    = true  rOpts2[:italic]    = true  ok
@@ -4394,7 +4398,7 @@ class WordReader
                 else
                     txt = block[:text]
                     if txt = NULL  txt = ""  ok
-                    if isList(runs) and len(runs) = 1
+                    if isList(runs) and len(runs) = 1 and isList(runs[1])
                         run = runs[1]
                         if run[:bold]      = true  pOpts[:bold]      = true  ok
                         if run[:italic]    = true  pOpts[:italic]    = true  ok
@@ -4608,6 +4612,7 @@ class WordReader
                                 # Multiple runs with mixed formatting
                                 wcRunList = []
                                 for run in cRuns
+                                    if !isList(run)  loop  ok
                                     rOpts2 = []
                                     if run[:bold]      = true  rOpts2[:bold]      = true  ok
                                     if run[:italic]    = true  rOpts2[:italic]    = true  ok
