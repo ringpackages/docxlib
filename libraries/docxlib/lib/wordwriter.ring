@@ -68,6 +68,8 @@ class WordWriter
     
     # Page settings
     nPageWidth          # Page width in twips
+    nDocSpacingAfter    # Document default paragraph space-after (twips)
+    nDocSpacingLine     # Document default line height (twips)
     nPageHeight         # Page height in twips
     nMarginTop          # Top margin in twips
     nMarginBottom       # Bottom margin in twips
@@ -190,6 +192,8 @@ class WordWriter
         cTitle = "Document"
         cDefaultFont = "Calibri"
         nDefaultSize = 11
+        nDocSpacingAfter = 200   # twips: document default para space-after
+        nDocSpacingLine  = 276   # twips: document default line height
         cHeaderText = ""
         cFooterText = ""
         bShowPageNumbers = false
@@ -345,6 +349,12 @@ class WordWriter
         
         return self
     
+    func setDocDefaultSpacing afterTwips, lineTwips
+        /*  Set document-default paragraph spacing to match source.  */
+        nDocSpacingAfter = afterTwips
+        nDocSpacingLine  = lineTwips
+        return self
+
     func setCustomPageSize widthCm, heightCm
         /*
             Set custom page size in centimeters
@@ -4931,6 +4941,9 @@ class WordWriter
 
     func writeStyles tempDir
         sep = wordGetSep()
+        # Capture member vars for use in this method (Ring dynamic scope safety)
+        wsDocSpacingAfter = nDocSpacingAfter
+        wsDocSpacingLine  = nDocSpacingLine
         
         c = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         c += '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
@@ -4952,7 +4965,7 @@ class WordWriter
         if bDocumentRTL
             c += '<w:bidi/>'   # MUST be first — before spacing — this is the doc-level RTL master switch
         ok
-        c += '<w:spacing w:after="200" w:line="276" w:lineRule="auto"/>'
+        c += '<w:spacing w:after="' + wsDocSpacingAfter + '" w:line="' + wsDocSpacingLine + '" w:lineRule="auto"/>'
         c += '</w:pPr></w:pPrDefault>'
         c += '</w:docDefaults>'
         

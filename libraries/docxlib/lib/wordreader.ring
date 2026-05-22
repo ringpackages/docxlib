@@ -29,6 +29,8 @@ class WordReader
     nDefaultSize
     nPageWidth
     nPageHeight
+    nDocSpacingAfter        # Source document default para space-after (twips)
+    nDocSpacingLine         # Source document default line height (twips)
     nMarginTop
     nMarginBottom
     nMarginLeft
@@ -89,6 +91,8 @@ class WordReader
         bSrcFirstPageDifferent = false
         cDefaultFont = "Calibri"
         nDefaultSize = 11
+        nDocSpacingAfter = -1   # -1 = not found in source
+        nDocSpacingLine  = -1
         nPageWidth   = 12240
         nPageHeight  = 15840
         nMarginTop    = 1440
@@ -306,6 +310,23 @@ class WordReader
                         szEl = substr(ddXml, szS, 60)
                         sv = wrAttr(szEl, "w:val")
                         if len(sv) > 0  nDefaultSize = floor(number(sv) / 2)  ok
+                    ok
+                    # Read pPrDefault paragraph spacing
+                    pprdS = wrFindFrom(ddXml, "<w:pPrDefault>", 1)
+                    if pprdS = 0  pprdS = wrFindFrom(ddXml, "<w:pPrDefault ", 1)  ok
+                    if pprdS > 0
+                        pprdE = wrFindCloseTag(ddXml, "w:pPrDefault", pprdS)
+                        if pprdE > 0
+                            pprdXml = substr(ddXml, pprdS, pprdE - pprdS)
+                            spDS = wrFindFrom(pprdXml, "<w:spacing ", 1)
+                            if spDS > 0
+                                spDEl = substr(pprdXml, spDS, 150)
+                                spDAv = wrAttr(spDEl, "w:after")
+                                spDLv = wrAttr(spDEl, "w:line")
+                                if len(spDAv) > 0  nDocSpacingAfter = number(spDAv)  ok
+                                if len(spDLv) > 0  nDocSpacingLine  = number(spDLv)   ok
+                            ok
+                        ok
                     ok
                 ok
             ok
@@ -4148,7 +4169,12 @@ class WordReader
             writer.setWatermark(cSrcWatermarkText, wmOpts)
         ok
 
-        # Page setup
+        # Page setup - pass exact page size (in twips) from source document
+        writer.setCustomPageSize(nPageWidth/567.0, nPageHeight/567.0)
+        # Pass source document default paragraph spacing so output matches
+        if nDocSpacingAfter >= 0 and nDocSpacingLine > 0
+            writer.setDocDefaultSpacing(nDocSpacingAfter, nDocSpacingLine)
+        ok
         if cSrcOrientation = "landscape"
             writer.setOrientation("landscape")
         ok
