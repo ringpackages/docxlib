@@ -199,6 +199,11 @@ func mergeCell runs, cellOptions
     for ri = 1 to runsLen
         run = runs[ri]
         if !isList(run)  loop  ok
+        # Handle line break runs
+        if run[:lineBreak] = true
+            cell.addLineBreak()
+            loop
+        ok
         txt = run[:text]
         if txt = NULL  txt = ""  ok
         cell.addRun("" + txt, run)

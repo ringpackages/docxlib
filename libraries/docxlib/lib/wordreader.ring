@@ -943,7 +943,7 @@ class WordReader
             pBdrData = wrParsePBdr(pPrXml)
             if pBdrData[:found] = true
                 # Existing heuristics: blockquote or hline
-                if wrFindFrom(pPrXml, "<w:left ", 1) > 0 and indentLeft >= 360
+                if wrFindFrom(pPrXml, "<w:left ", 1) > 0 and indentLeft >= 200
                     isBlockQuote = true
                 else
                     if wrFindFrom(pPrXml, "<w:bottom ", 1) > 0 and
@@ -1770,6 +1770,19 @@ class WordReader
             return block
         ok
 
+        # Detect writer-generated captions by inline formatting
+        # (italic + small font <=9pt + no bullet)
+        if !isCaption and !isListItem and !isBlockQuote and len(fullText) > 0
+            if isList(aRuns) and len(aRuns) > 0
+                allItalicSmall = true
+                for capRun in aRuns
+                    if capRun[:italic] != true  allItalicSmall = false  ok
+                    if capRun[:size] > 18 or capRun[:size] = 0  allItalicSmall = false  ok
+                next
+                if allItalicSmall  isCaption = true  ok
+            ok
+        ok
+
         if isCaption
             block[:type]     = "caption"
             block[:text]     = fullText
@@ -2393,6 +2406,17 @@ class WordReader
                         ok
                     ok
 
+                    # Check for line break run (<w:br/>)
+                    brS3 = wrFindFrom(rXmlb, "<w:br/>", 1)
+                    if brS3 = 0  brS3 = wrFindFrom(rXmlb, "<w:br ", 1)  ok
+                    if brS3 > 0 and len(tTextb) = 0
+                        # Pure line break run - store as special marker
+                        brBlk = [:text="", :bold=false, :italic=false,
+                                 :underline=false, :strike=false, :color="",
+                                 :size=0, :font="", :highlight="", :rtl=false,
+                                 :isLineBreak=true]
+                        cellRuns + brBlk
+                    ok
                     if len(tTextb) > 0
                         cellText += tTextb
                         effectiveHlb = rHighlightb
@@ -2408,6 +2432,26 @@ class WordReader
                     rPos2 = rEb
                 end
                 cpPos = cpE
+            end
+
+            # Parse each cell paragraph as a full block for rich round-trip
+            cellParas = []
+            cpPos3 = 1
+            while true
+                cp3S1 = wrFindFrom(tcXml, "<w:p>", cpPos3)
+                cp3S2 = wrFindFrom(tcXml, "<w:p ", cpPos3)
+                cp3S  = wrMinPos(cp3S1, cp3S2)
+                if cp3S = 0  break  ok
+                if wrIsSelfClosingTag(tcXml, cp3S)
+                    cpPos3 = wrSelfClosingEnd(tcXml, cp3S)
+                    loop
+                ok
+                cp3E = wrFindCloseTag(tcXml, "w:p", cp3S)
+                if cp3E = 0  break  ok
+                cp3Xml = substr(tcXml, cp3S, cp3E - cp3S)
+                cp3Block = parseParagraph(cp3Xml)
+                cellParas + cp3Block
+                cpPos3 = cp3E
             end
 
             # Cell hyperlink
@@ -2486,7 +2530,8 @@ class WordReader
                     :borderSides  = cellBdrSides,
                     :textDir      = cellTextDir,
                     :nestedTable  = cellNestedTable,
-                    :isMergeContinue = false]
+                    :isMergeContinue = false,
+                    :cellParas = cellParas]
             aRow + cell
             tcPos = tcEnd
         end
@@ -4454,8 +4499,95 @@ class WordReader
                             hasImg = len(cImgPth) > 0 and fexists(cImgPth)
                             hasHl  = len(cHlUrl) > 0
                             hasRichRuns = isList(cRuns) and len(cRuns) > 1
+                            # Check for rich multi-paragraph cell content
+                            cParas = cell[:cellParas]
+                            hasRichParas = false
+                            if isList(cParas) and len(cParas) > 1
+                                hasRichParas = true
+                            elseif isList(cParas) and len(cParas) = 1
+                                ptype1 = cParas[1][:type]
+                                if ptype1 = "listitem" or ptype1 = "blockquote"
+                                   or ptype1 = "caption"
+                                    hasRichParas = true
+                                ok
+                            ok
 
-                            if hasImg
+                            if hasRichParas
+                                # Multi-paragraph rich cell: reproduce each paragraph
+                                wc = new WordCell()
+                                if len(cBg) > 0  wc.cBgColor = cBg  ok
+                                if len(cAlign) > 0  wc.setAlign(cAlign)  ok
+                                if len(cVAl) > 0    wc.setVerticalAlign(cVAl)  ok
+                                if cSpan > 1        wc.nColSpan = cSpan  ok
+                                bFirstPara = true
+                                listRunsQ = []
+                                listIsBulletQ = true
+                                for cpBlk in cParas
+                                    cpType = cpBlk[:type]
+                                    cpText = cpBlk[:text]
+                                    if cpText = NULL  cpText = ""  ok
+                                    cpRuns = cpBlk[:runs]
+                                    # Flush list queue if current para is not listitem
+                                    if cpType != "listitem" and len(listRunsQ) > 0
+                                        listIdQ = writer.registerCellList(listIsBulletQ)
+                                        if listIsBulletQ
+                                            wc.addCellBulletList(listRunsQ, listIdQ)
+                                        else
+                                            wc.addCellNumberedList(listRunsQ, listIdQ)
+                                        ok
+                                        listRunsQ = []
+                                    ok
+                                    if cpType = "listitem"
+                                        listRunsQ + cpText
+                                        cpBulletFlag = cpBlk[:isBullet]
+                                        if cpBulletFlag != NULL  listIsBulletQ = cpBulletFlag = true
+                                        else  listIsBulletQ = true  ok
+                                    elseif cpType = "blockquote"
+                                        wc.addCellBlockQuote(cpText)
+                                    elseif cpType = "caption"
+                                        wc.addCellCaption(cpText)
+                                    elseif cpType = "hyperlink"
+                                        hlUrl3 = cpBlk[:url]
+                                        if hlUrl3 = NULL  hlUrl3 = ""  ok
+                                        if len(hlUrl3) > 0
+                                            hlRelId3 = writer.registerHyperlink(hlUrl3)
+                                            wc.addCellHyperlink(cpText, hlRelId3)
+                                        else
+                                            if !bFirstPara  wc.addLineBreak()  ok
+                                            wc.addRun(cpText, [])
+                                        ok
+                                    elseif cpType = "empty"
+                                        # empty paragraph in cell - skip
+                                    else
+                                        # Normal paragraph: add runs with formatting
+                                        if !bFirstPara  wc.addLineBreak()  ok
+                                        if isList(cpRuns) and len(cpRuns) > 0
+                                            for cpRun in cpRuns
+                                                rOptsCP = []
+                                                if cpRun[:bold]      = true  rOptsCP[:bold]      = true  ok
+                                                if cpRun[:italic]    = true  rOptsCP[:italic]    = true  ok
+                                                if cpRun[:underline] = true  rOptsCP[:underline] = true  ok
+                                                if len(cpRun[:color] + "")    > 0  rOptsCP[:color]    = cpRun[:color]    ok
+                                                if len(cpRun[:font]  + "")    > 0  rOptsCP[:font]     = cpRun[:font]     ok
+                                                if cpRun[:size]               > 0  rOptsCP[:size]     = cpRun[:size]     ok
+                                                wc.addRun(cpRun[:text], rOptsCP)
+                                            next
+                                        elseif len(cpText) > 0
+                                            wc.addRun(cpText, [])
+                                        ok
+                                        bFirstPara = false
+                                    ok
+                                next
+                                # Flush any remaining list items
+                                if len(listRunsQ) > 0
+                                    listIdQ2 = writer.registerCellList(listIsBulletQ)
+                                    if listIsBulletQ
+                                        wc.addCellBulletList(listRunsQ, listIdQ2)
+                                    else
+                                        wc.addCellNumberedList(listRunsQ, listIdQ2)
+                                    ok
+                                ok
+                            elseif hasImg
                                 # Create empty cell then attach image
                                 wc = wordCell("", cOpts)
                                 cIW = cell[:imgW]
@@ -4486,8 +4618,24 @@ class WordReader
                                     if run[:size] > 0             rOpts2[:size]      = run[:size]       ok
                                     if len(run[:highlight]) > 0   rOpts2[:highlight] = run[:highlight]  ok
                                     if run[:rtl] = true            rOpts2[:rtl]       = true            ok
-                                    wPair2 = [run[:text], rOpts2]
-                                    wcRunList + Ref(wPair2)
+                                    if run[:isLineBreak] = true
+                                        # Line break: add as line break run
+                                        lbEntry = [:text="", :lineBreak=true]
+                                        wcRunList + Ref(lbEntry)
+                                    else
+                                        # Build proper associative list for mergeCell
+                                        wcEntry = [:text=run[:text]]
+                                        if rOpts2[:bold]      = true  wcEntry[:bold]      = true  ok
+                                        if rOpts2[:italic]    = true  wcEntry[:italic]    = true  ok
+                                        if rOpts2[:underline] = true  wcEntry[:underline] = true  ok
+                                        if rOpts2[:strike]    = true  wcEntry[:strike]    = true  ok
+                                        if rOpts2[:color]     != NULL  if len(rOpts2[:color])     > 0  wcEntry[:color]     = rOpts2[:color]     ok  ok
+                                        if rOpts2[:font]      != NULL  if len(rOpts2[:font])      > 0  wcEntry[:font]      = rOpts2[:font]      ok  ok
+                                        if rOpts2[:size]              > 0  wcEntry[:size]      = rOpts2[:size]      ok
+                                        if rOpts2[:highlight] != NULL  if len(rOpts2[:highlight]) > 0  wcEntry[:highlight] = rOpts2[:highlight] ok  ok
+                                        if rOpts2[:rtl]       = true  wcEntry[:rtl]       = true  ok
+                                        wcRunList + Ref(wcEntry)
+                                    ok
                                 next
                                 wc = mergeCell(wcRunList, cOpts)
                             else
