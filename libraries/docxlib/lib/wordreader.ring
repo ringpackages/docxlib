@@ -1827,11 +1827,23 @@ class WordReader
         ok
 
         if isBlockQuote
-            block[:type]     = "blockquote"
-            block[:text]     = fullText
-            block[:runs]     = aRuns
-            block[:bgColor]  = paraBgColor
-            block[:bookmark] = bookmarkName
+            block[:type]       = "blockquote"
+            block[:text]       = fullText
+            block[:runs]       = aRuns
+            block[:bgColor]    = paraBgColor
+            block[:bookmark]   = bookmarkName
+            # Store border + formatting data for faithful round-trip
+            block[:hasBorder]  = paraHasBorder
+            block[:borderStyle] = paraBdrStyle
+            block[:borderColor] = paraBdrColor
+            block[:borderSize]  = paraBdrSize
+            block[:borderSpace] = paraBdrSpace
+            block[:borderSides] = paraBdrSides
+            block[:align]       = alignVal
+            block[:indentLeft]  = indentLeft
+            block[:indentRight] = indentRight
+            block[:spaceBefore] = spaceBefore
+            block[:spaceAfter]  = spaceAfter
             return block
         ok
 
@@ -4887,7 +4899,57 @@ class WordReader
                 if bm != NULL and len(bm) > 0  writer.addBookmark(bm)  ok
                 txt = block[:text]
                 if txt = NULL  txt = ""  ok
-                writer.addBlockQuote(txt)
+                bqHasBorder = block[:hasBorder]
+                if bqHasBorder = true
+                    # Bordered paragraph: reproduce exact border/formatting
+                    bqOpts = [:_hasBorder=true]
+                    bqStyle = block[:borderStyle]
+                    bqColor = block[:borderColor]
+                    bqSize  = block[:borderSize]
+                    bqSpace = block[:borderSpace]
+                    bqSides = block[:borderSides]
+                    bqAlign = block[:align]
+                    bqIndL  = block[:indentLeft]
+                    bqIndR  = block[:indentRight]
+                    bqSpB   = block[:spaceBefore]
+                    bqSpA   = block[:spaceAfter]
+                    bqBg    = block[:bgColor]
+                    if bqStyle != NULL and len(bqStyle) > 0  bqOpts[:borderStyle] = bqStyle  ok
+                    if bqColor != NULL and len(bqColor) > 0  bqOpts[:borderColor] = bqColor  ok
+                    if isNumber(bqSize) and bqSize > 0       bqOpts[:borderSize]  = bqSize   ok
+                    if isNumber(bqSpace) and bqSpace > 0     bqOpts[:borderSpace] = bqSpace  ok
+                    if isList(bqSides) and len(bqSides) > 0  bqOpts[:sides]       = bqSides  ok
+                    if bqAlign != NULL and len(bqAlign) > 0  bqOpts[:align]       = bqAlign  ok
+                    if isNumber(bqIndL) and bqIndL > 0       bqOpts[:indent]      = bqIndL   ok
+                    if isNumber(bqIndR) and bqIndR > 0       bqOpts[:indentRight] = bqIndR   ok
+                    if isNumber(bqSpB)  and bqSpB  > 0       bqOpts[:spaceBefore] = bqSpB    ok
+                    if isNumber(bqSpA)  and bqSpA  > 0       bqOpts[:spaceAfter]  = bqSpA    ok
+                    if bqBg != NULL and len(bqBg) > 0        bqOpts[:bgColor]     = bqBg     ok
+                    # Replay runs if present
+                    bqRuns = block[:runs]
+                    if isList(bqRuns) and len(bqRuns) > 1
+                        bqRunList = []
+                        for bqRun in bqRuns
+                            if !isList(bqRun)  loop  ok
+                            bqROpts = []
+                            if bqRun[:bold]      = true  bqROpts[:bold]      = true  ok
+                            if bqRun[:italic]    = true  bqROpts[:italic]    = true  ok
+                            if bqRun[:underline] = true  bqROpts[:underline] = true  ok
+                            if len(bqRun[:color]+"") > 0  bqROpts[:color] = bqRun[:color]  ok
+                            if len(bqRun[:font] +"") > 0  bqROpts[:font]  = bqRun[:font]   ok
+                            if bqRun[:size]      > 0     bqROpts[:size]  = bqRun[:size]    ok
+                            bqRunPair = [:text=bqRun[:text], :bold=bqROpts[:bold],
+                                          :italic=bqROpts[:italic], :color=bqROpts[:color],
+                                          :underline=bqROpts[:underline]]
+                            bqRunList + bqRunPair
+                        next
+                        writer.addBorderedParagraph(bqRunList, bqOpts)
+                    else
+                        writer.addBorderedParagraph(txt, bqOpts)
+                    ok
+                else
+                    writer.addBlockQuote(txt)
+                ok
 
             elseif bType = "footnote"
                 bm = block[:bookmark]
