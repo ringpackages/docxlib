@@ -53,6 +53,7 @@ class WordCell
     aRunSize
     aRunColor
     aRunHighlight
+    aRunRTL
 
     # Cell lists (parallel arrays: items stored as ";" delimited strings)
     aCellListItems      # List of ";" delimited item strings
@@ -111,6 +112,7 @@ class WordCell
         aRunSize = []
         aRunColor = []
         aRunHighlight = []
+        aRunRTL = []
         aCellListItems = []
         aCellListTypes = []
         aCellListIds = []
@@ -141,6 +143,7 @@ class WordCell
         aRunSize = []
         aRunColor = []
         aRunHighlight = []
+        aRunRTL = []
         return addRun(text, options)
 
     func addText text, options
@@ -182,6 +185,8 @@ class WordCell
 
             if options[:highlight] != NULL  aRunHighlight + options[:highlight]
             else  aRunHighlight + "" ok
+            if options[:rtl] = true  aRunRTL + 1
+            else  aRunRTL + 0 ok
         else
             aRunBold + 0
             aRunItalic + 0
@@ -191,6 +196,7 @@ class WordCell
             aRunSize + 0
             aRunColor + ""
             aRunHighlight + ""
+            aRunRTL + 0
         ok
 
         return self
@@ -203,6 +209,10 @@ class WordCell
 
     func getRunCount
         return nRunCount
+
+    func getRunRTL idx
+        if idx <= len(aRunRTL)  return aRunRTL[idx]  ok
+        return 0
 
     func getRunText idx
         return aRunTexts[idx]

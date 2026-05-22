@@ -69,6 +69,8 @@ class WordWriter
     # Page settings
     nPageWidth          # Page width in twips
     nDocSpacingAfter    # Document default paragraph space-after (twips)
+    nHeaderMarginTwips  # Header margin in twips
+    nFooterMarginTwips  # Footer margin in twips
     nDocSpacingLine     # Document default line height (twips)
     nPageHeight         # Page height in twips
     nMarginTop          # Top margin in twips
@@ -193,6 +195,8 @@ class WordWriter
         cDefaultFont = "Calibri"
         nDefaultSize = 11
         nDocSpacingAfter = 200   # twips: document default para space-after
+        nHeaderMarginTwips = 720  # default header margin
+        nFooterMarginTwips = 720  # default footer margin
         nDocSpacingLine  = 276   # twips: document default line height
         cHeaderText = ""
         cFooterText = ""
@@ -349,6 +353,12 @@ class WordWriter
         
         return self
     
+    func setHeaderFooterMargins headerTwips, footerTwips
+        /*  Set header/footer margins (twips) from source document.  */
+        nHeaderMarginTwips = headerTwips
+        nFooterMarginTwips = footerTwips
+        return self
+
     func setDocDefaultSpacing afterTwips, lineTwips
         /*  Set document-default paragraph spacing to match source.  */
         nDocSpacingAfter = afterTwips
@@ -3098,7 +3108,7 @@ class WordWriter
                     xml_ += generateSectPrHeaderFooterRefs()
                     xml_ += '<w:type w:val="nextPage"/>'
                     xml_ += '<w:pgSz w:w="' + nPageWidth + '" w:h="' + nPageHeight + '"/>'
-                    xml_ += '<w:pgMar w:top="' + nMarginTop + '" w:right="' + nMarginRight + '" w:bottom="' + nMarginBottom + '" w:left="' + nMarginLeft + '" w:header="720" w:footer="720" w:gutter="0"/>'
+                    xml_ += '<w:pgMar w:top="' + nMarginTop + '" w:right="' + nMarginRight + '" w:bottom="' + nMarginBottom + '" w:left="' + nMarginLeft + '" w:header="' + nHeaderMarginTwips + '" w:footer="' + nFooterMarginTwips + '" w:gutter="0"/>'
                     if nColumns > 1
                         xml_ += '<w:cols w:num="' + nColumns + '" w:space="' + nColumnSpace + '"/>'
                     ok
@@ -3110,7 +3120,7 @@ class WordWriter
                     xml_ += generateSectPrHeaderFooterRefs()
                     xml_ += '<w:type w:val="nextPage"/>'
                     xml_ += '<w:pgSz w:w="' + nPageHeight + '" w:h="' + nPageWidth + '" w:orient="landscape"/>'
-                    xml_ += '<w:pgMar w:top="' + nMarginLeft + '" w:right="' + nMarginTop + '" w:bottom="' + nMarginRight + '" w:left="' + nMarginBottom + '" w:header="720" w:footer="720" w:gutter="0"/>'
+                    xml_ += '<w:pgMar w:top="' + nMarginLeft + '" w:right="' + nMarginTop + '" w:bottom="' + nMarginRight + '" w:left="' + nMarginBottom + '" w:header="' + nHeaderMarginTwips + '" w:footer="' + nFooterMarginTwips + '" w:gutter="0"/>'
                     xml_ += '</w:sectPr></w:pPr></w:p>'
                 
                 on "blockquote"
@@ -3204,7 +3214,7 @@ class WordWriter
         xml_ += '/>'
         
         # Page margins
-        xml_ += '<w:pgMar w:top="' + nMarginTop + '" w:right="' + nMarginRight + '" w:bottom="' + nMarginBottom + '" w:left="' + nMarginLeft + '" w:header="720" w:footer="720" w:gutter="0"/>'
+        xml_ += '<w:pgMar w:top="' + nMarginTop + '" w:right="' + nMarginRight + '" w:bottom="' + nMarginBottom + '" w:left="' + nMarginLeft + '" w:header="' + nHeaderMarginTwips + '" w:footer="' + nFooterMarginTwips + '" w:gutter="0"/>'
         
         # Page borders (must come after pgMar in the schema)
         if bPageBorder
@@ -4067,6 +4077,11 @@ class WordWriter
             ok
         ok
         
+        # Table-level background shading
+        tblBgFillVal = options[:tblBgFill]
+        if tblBgFillVal != NULL and len(tblBgFillVal) > 0
+            xml_ += '<w:shd w:val="clear" w:color="auto" w:fill="' + wordColorToHex(tblBgFillVal) + '"/>'
+        ok
         if borderStyle != "none"
             xml_ += '<w:tblBorders>'
             # If a per-side borders map was provided (round-trip from reader), use it;
@@ -4601,6 +4616,9 @@ class WordWriter
                     ok
                     if len(cellObj.aRunHighlight[runIdx]) > 0
                         rPr += '<w:highlight w:val="' + cellObj.aRunHighlight[runIdx] + '"/>'
+                    ok
+                    if runIdx <= len(cellObj.aRunRTL) and cellObj.aRunRTL[runIdx] = 1
+                        rPr += '<w:rtl/>'
                     ok
                 ok
                 

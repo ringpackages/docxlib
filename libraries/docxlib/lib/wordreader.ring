@@ -31,6 +31,8 @@ class WordReader
     nPageHeight
     nDocSpacingAfter        # Source document default para space-after (twips)
     nDocSpacingLine         # Source document default line height (twips)
+    nHeaderMargin           # Source document header margin (twips)
+    nFooterMargin           # Source document footer margin (twips)
     nMarginTop
     nMarginBottom
     nMarginLeft
@@ -99,6 +101,8 @@ class WordReader
         nMarginBottom = 1440
         nMarginLeft   = 1800
         nMarginRight  = 1800
+        nHeaderMargin = 720
+        nFooterMargin = 720
         aSourceThemeColors = []
         aListStyles = []
         aFootnotes  = []
@@ -373,6 +377,10 @@ class WordReader
                         if len(bv) > 0  nMarginBottom = number(bv)  ok
                         if len(lv) > 0  nMarginLeft   = number(lv)  ok
                         if len(rv) > 0  nMarginRight  = number(rv)  ok
+                        hv2 = wrAttr(pgMrEl, "w:header")
+                        fv2 = wrAttr(pgMrEl, "w:footer")
+                        if len(hv2) > 0  nHeaderMargin = number(hv2)  ok
+                        if len(fv2) > 0  nFooterMargin = number(fv2)  ok
                     ok
                     # Columns
                     colS = wrFindFrom(lastSectXml, "<w:cols ", 1)
@@ -1664,6 +1672,7 @@ class WordReader
             rColor = ""; rSize = 0; rFont = ""; rHighlight = ""
             rSuper = false; rSub = false; rLang = ""; rStyleName = ""
             rBdrStyle = ""; rBdrColor = ""; rBdrSize = 0
+            rRTL = false
             rPrS = wrFindFrom(rXml, "<w:rPr>", 1)
             if rPrS = 0  rPrS = wrFindFrom(rXml, "<w:rPr ", 1)  ok
             if rPrS > 0
@@ -1680,6 +1689,7 @@ class WordReader
                     if wrFindFrom(rPrXml, "<w:caps",    1) > 0  rCaps     = true  ok
                     if wrFindFrom(rPrXml, "<w:smallCaps",1)> 0  rSmallCaps= true  ok
                     if wrFindFrom(rPrXml, "<w:vanish",  1) > 0  rVanish   = true  ok
+                    if wrFindFrom(rPrXml, "<w:rtl/>",  1) > 0 or wrFindFrom(rPrXml, "<w:rtl ", 1) > 0  rRTL = true  ok
                     colS2 = wrFindFrom(rPrXml, "<w:color ", 1)
                     if colS2 > 0
                         colEl2 = substr(rPrXml, colS2, 80)
@@ -1782,6 +1792,7 @@ class WordReader
                 run[:borderStyle]  = rBdrStyle
                 run[:borderColor]  = rBdrColor
                 run[:borderSize]   = rBdrSize
+                run[:rtl]          = rRTL
                 aRuns + run
                 # Vanished runs are hidden — exclude from plain text
                 if !rVanish
@@ -2032,6 +2043,7 @@ class WordReader
         tblBorderStyle = "single"
         tblBorderColor = "auto"
         tblBordersMap  = []
+        tblBgFill      = ""
         tblStyleName   = ""
         tblWidthTwips  = 0
         tblWidthType   = "auto"
@@ -2142,6 +2154,15 @@ class WordReader
                         ok
                     ok
                 ok
+                # Table-level background shading (tblPr > w:shd)
+                tblShdS = wrFindFrom(tblPrXml, "<w:shd ", 1)
+                if tblShdS > 0
+                    tblShdEl = substr(tblPrXml, tblShdS, 150)
+                    tblShdFillV = wrAttr(tblShdEl, "w:fill")
+                    if len(tblShdFillV) > 0 and tblShdFillV != "auto"
+                        tblBgFill = tblShdFillV
+                    ok
+                ok
                 # tblLook flags (banding row/col control)
                 tblLookFirstRow = -1
                 tblLookLastRow  = -1
@@ -2236,6 +2257,7 @@ class WordReader
         block[:borderStyle]  = tblBorderStyle
         block[:borderColor]  = tblBorderColor
         block[:bordersMap]   = tblBordersMap
+        block[:tblBgFill]    = tblBgFill
         block[:rowHeights]   = aRowHeights
         block[:rowHRules]    = aRowHRules
         block[:rowCantSplit] = aRowCantSplit
@@ -2391,7 +2413,29 @@ class WordReader
                 if cpE = 0  break  ok
                 cpXml = substr(tcXml, cpS, cpE - cpS)
 
-                # Alignment from first paragraph
+                # Alignment + pPr rPr highlight (paragraph mark formatting)
+                cellPprHighlight = ""
+                # Parse pPr rPr highlight every cell paragraph (not just first)
+                cpPrHlS = wrFindFrom(cpXml, "<w:pPr>", 1)
+                if cpPrHlS = 0  cpPrHlS = wrFindFrom(cpXml, "<w:pPr ", 1)  ok
+                if cpPrHlS > 0
+                    cpPrHlE = wrFindCloseTag(cpXml, "w:pPr", cpPrHlS)
+                    if cpPrHlE > 0
+                        cpPrXmlH = substr(cpXml, cpPrHlS, cpPrHlE - cpPrHlS)
+                        cpRprHlS = wrFindFrom(cpPrXmlH, "<w:rPr>", 1)
+                        if cpRprHlS > 0
+                            cpRprHlE = wrFindCloseTag(cpPrXmlH, "w:rPr", cpRprHlS)
+                            if cpRprHlE > 0
+                                cpRprHlXml = substr(cpPrXmlH, cpRprHlS, cpRprHlE - cpRprHlS)
+                                cpHlTagS = wrFindFrom(cpRprHlXml, "<w:highlight ", 1)
+                                if cpHlTagS > 0
+                                    cpHlTagEl = substr(cpRprHlXml, cpHlTagS, 80)
+                                    cellPprHighlight = wrAttr(cpHlTagEl, "w:val")
+                                ok
+                            ok
+                        ok
+                    ok
+                ok
                 if len(firstPAlign) = 0
                     pPrS2 = wrFindFrom(cpXml, "<w:pPr>", 1)
                     if pPrS2 = 0  pPrS2 = wrFindFrom(cpXml, "<w:pPr ", 1)  ok
@@ -2445,6 +2489,7 @@ class WordReader
 
                     rBoldb=false; rItalicb=false; rUnderb=false; rStrikeb=false
                     rColorb=""; rSizeb=0; rFontb=""; rHighlightb=""
+                    rRTLb = false
                     rPrSb = wrFindFrom(rXmlb, "<w:rPr>", 1)
                     if rPrSb = 0  rPrSb = wrFindFrom(rXmlb, "<w:rPr ", 1)  ok
                     if rPrSb > 0
@@ -2480,14 +2525,23 @@ class WordReader
                                 hlElb = substr(rPrXmlb, hlSb, 60)
                                 rHighlightb = wrAttr(hlElb, "w:val")
                             ok
+                            # RTL run direction in cell
+                            if wrFindFrom(rPrXmlb, "<w:rtl/>", 1) > 0 or wrFindFrom(rPrXmlb, "<w:rtl ", 1) > 0
+                                rRTLb = true
+                            ok
                         ok
                     ok
 
                     if len(tTextb) > 0
                         cellText += tTextb
+                        effectiveHlb = rHighlightb
+                        if len(effectiveHlb) = 0 and len(cellPprHighlight) > 0
+                            effectiveHlb = cellPprHighlight
+                        ok
                         crBlk = [:text=tTextb,:bold=rBoldb,:italic=rItalicb,
                                  :underline=rUnderb,:strike=rStrikeb,:color=rColorb,
-                                 :size=rSizeb,:font=rFontb,:highlight=rHighlightb]
+                                 :size=rSizeb,:font=rFontb,:highlight=effectiveHlb,
+                                 :rtl=rRTLb]
                         cellRuns + crBlk
                     ok
                     rPos2 = rEb
@@ -4180,6 +4234,7 @@ class WordReader
         ok
         writer.setMargins(nMarginTop/567.0, nMarginBottom/567.0,
                           nMarginLeft/567.0, nMarginRight/567.0)
+        writer.setHeaderFooterMargins(nHeaderMargin, nFooterMargin)
 
         # Header / footer
         if len(cHeaderText) > 0
@@ -4292,6 +4347,7 @@ class WordReader
                         if len(run[:color]) > 0    rOpts2[:color]     = run[:color]  ok
                         if len(run[:font])  > 0    rOpts2[:font]      = run[:font]   ok
                         if run[:size] > 0          rOpts2[:size]      = run[:size]   ok
+                        if run[:rtl] = true  rOpts2[:rtl] = true  ok
                         wPair = [run[:text], rOpts2]
                         wrRuns + Ref(wPair)
                     next
@@ -4449,6 +4505,7 @@ class WordReader
                             pOpts[:runBorderColor] = run[:borderColor]
                             pOpts[:runBorderSize]  = run[:borderSize]
                         ok
+                        if run[:rtl] = true  pOpts[:rtl] = true  ok
                     ok
                     if hasComment
                         writer.addComment(txt, cmt, cAuth)
@@ -4560,6 +4617,7 @@ class WordReader
                                     if len(run[:font])       > 0  rOpts2[:font]      = run[:font]       ok
                                     if run[:size] > 0             rOpts2[:size]      = run[:size]       ok
                                     if len(run[:highlight]) > 0   rOpts2[:highlight] = run[:highlight]  ok
+                                    if run[:rtl] = true            rOpts2[:rtl]       = true            ok
                                     wPair2 = [run[:text], rOpts2]
                                     wcRunList + Ref(wPair2)
                                 next
@@ -4576,6 +4634,7 @@ class WordReader
                                     if len(run[:font])      > 0  cOpts[:font]      = run[:font]       ok
                                     if run[:size]           > 0  cOpts[:size]      = run[:size]       ok
                                     if len(run[:highlight]) > 0  cOpts[:highlight] = run[:highlight]  ok
+                                    if run[:rtl] = true  cOpts[:rtl] = true  ok
                                 ok
                                 wc = wordCell(cText, cOpts)
                             ok
@@ -4666,6 +4725,8 @@ class WordReader
                 if brdColor != "auto"   tOpts[:borderColor]    = brdColor  ok
                 brdMap = block[:bordersMap]
                 if isList(brdMap) and len(brdMap) > 0  tOpts[:bordersMap] = brdMap  ok
+                tblBg2 = block[:tblBgFill]
+                if tblBg2 != NULL and len(tblBg2) > 0  tOpts[:tblBgFill] = tblBg2  ok
                 if len(hdrBg) > 0       tOpts[:headerBgColor]  = hdrBg     ok
                 if len(evenBg) > 0      tOpts[:evenRowBgColor] = evenBg    ok
                 if len(colWids) > 0     tOpts[:colWidths]      = colWids   ok
