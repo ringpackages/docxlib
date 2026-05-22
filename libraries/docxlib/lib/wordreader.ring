@@ -1569,7 +1569,7 @@ class WordReader
             # Chart detection: <c:chart r:id="..."/> inside drawing
             cchS = wrFindFrom(pXml, "<c:chart ", drawS)
             if cchS > 0
-                cchEl = substr(pXml, cchS, 120)
+                cchEl = substr(pXml, cchS, 400)  # wide enough to include xmlns+r:id
                 chartRelId2 = wrAttr(cchEl, "r:id")
                 if len(chartRelId2) > 0
                     isChart  = true
@@ -1824,7 +1824,7 @@ class WordReader
             return block
         ok
 
-        if len(fullText) = 0 and !isImage and !isHorizLine and !isListItem and
+        if len(fullText) = 0 and !isImage and !isChart and !isHorizLine and !isListItem and
            !hasNote and len(sectBreakType) = 0
             block[:type] = "empty"
             return block
@@ -1832,13 +1832,19 @@ class WordReader
 
         if isChart
             chartData2 = wrParseChartData(chartRelId2, aRelationships, cTempDir)
-            block[:type]      = "chart"
-            block[:chartType] = chartData2[:type]
-            block[:chartTitle]= chartData2[:title]
-            block[:chartData] = chartData2[:series]
-            block[:widthCm]   = chartWidthCm
-            block[:heightCm]  = chartHeightCm
-            block[:bookmark]  = bookmarkName
+            block[:type]            = "chart"
+            block[:chartType]       = chartData2[:type]
+            block[:chartTitle]      = chartData2[:title]
+            block[:chartData]       = chartData2[:series]
+            block[:chartGrouping]   = chartData2[:grouping]
+            block[:chartBarDir]     = chartData2[:barDir]
+            block[:chartSmooth]     = chartData2[:smooth]
+            block[:chartLegendPos]  = chartData2[:legendPos]
+            block[:chartShowLabels] = chartData2[:showDataLabels]
+            block[:chartSerColors]  = chartData2[:serColors]
+            block[:widthCm]         = chartWidthCm
+            block[:heightCm]        = chartHeightCm
+            block[:bookmark]        = bookmarkName
             return block
         ok
 
@@ -4971,28 +4977,80 @@ class WordReader
                 writer.addColumnBreak()
 
             elseif bType = "chart"
-                ct = block[:chartType]
-                if ct = NULL  ct = "chart"  ok
+                # Round-trip chart using native addChart()
+                ctRaw  = block[:chartType]
+                if ctRaw = NULL  ctRaw = "barChart"  ok
                 cw = block[:widthCm]
                 ch = block[:heightCm]
-                if !isNumber(cw) or cw <= 0  cw = 10  ok
-                if !isNumber(ch) or ch <= 0  ch = 6   ok
-                ctTitle = block[:chartTitle]
-                if ctTitle = NULL  ctTitle = ""  ok
-                ctSeries = block[:chartData]
-                placeholderText = "[Chart: " + ct
-                if len(ctTitle) > 0  placeholderText += " - " + ctTitle  ok
+                if !isNumber(cw) or cw <= 0  cw = 14  ok
+                if !isNumber(ch) or ch <= 0  ch = 9   ok
+                ctTitle       = block[:chartTitle]
+                ctSeries      = block[:chartData]
+                ctGrouping    = block[:chartGrouping]
+                ctBarDir      = block[:chartBarDir]
+                ctSmooth      = block[:chartSmooth]
+                ctLegendPos   = block[:chartLegendPos]
+                ctShowLabels  = block[:chartShowLabels]
+                ctSerColors   = block[:chartSerColors]
+                if ctTitle      = NULL  ctTitle      = ""     ok
+                if ctSeries     = NULL  ctSeries     = []     ok
+                if ctGrouping   = NULL  ctGrouping   = ""     ok
+                if ctBarDir     = NULL  ctBarDir     = ""     ok
+                if ctSmooth     = NULL  ctSmooth     = false  ok
+                if ctLegendPos  = NULL  ctLegendPos  = "r"    ok
+                if ctShowLabels = NULL  ctShowLabels = false  ok
+                if !isList(ctSerColors)  ctSerColors = []  ok
+                if len(ctLegendPos) = 0  ctLegendPos = "r"  ok
+
+                # Map chartType to addChart type string
+                # barChart with barDir=col -> column; barDir=bar -> bar
+                ctApiType = "column"
+                if ctRaw = "barChart"
+                    if ctBarDir = "bar"  ctApiType = "bar"
+                    else  ctApiType = "column"  ok
+                elseif ctRaw = "lineChart"     ctApiType = "line"
+                elseif ctRaw = "areaChart"     ctApiType = "area"
+                elseif ctRaw = "pieChart"      ctApiType = "pie"
+                elseif ctRaw = "doughnutChart" ctApiType = "doughnut"
+                else  ctApiType = "column"  ok
+
+                # Build categories from first series (all share same cats)
+                ctCats = []
                 if isList(ctSeries) and len(ctSeries) > 0
-                    placeholderText += " (" + string(len(ctSeries)) + " series"
-                    for cser in ctSeries
-                        sname = cser[:name]
-                        if sname = NULL  sname = ""  ok
-                        if len(sname) > 0  placeholderText += ": " + sname  ok
-                    next
-                    placeholderText += ")"
+                    firstSer = ctSeries[1]
+                    if isList(firstSer)
+                        cats2 = firstSer[:categories]
+                        if isList(cats2)  ctCats = cats2  ok
+                    ok
                 ok
-                placeholderText += " " + string(cw) + "x" + string(ch) + "cm]"
-                writer.addParagraph(placeholderText, [:italic=true, :color="888888"])
+
+                # Build series list for addChart
+                ctSerList = []
+                serIdx2 = 0
+                if isList(ctSeries)
+                    for cser2 in ctSeries
+                        serIdx2++
+                        if isList(cser2)
+                            sEntry = [:name=cser2[:name], :values=cser2[:values]]
+                            if serIdx2 <= len(ctSerColors)
+                                sc2 = ctSerColors[serIdx2]
+                                if sc2 != NULL and len(sc2) > 0
+                                    sEntry[:color] = sc2
+                                ok
+                            ok
+                            ctSerList + sEntry
+                        ok
+                    next
+                ok
+
+                # Build chart options
+                ctOpts = [:widthCm=cw, :heightCm=ch,
+                          :centered=true, :legendPos=ctLegendPos,
+                          :showDataLabels=ctShowLabels]
+                if len(ctGrouping) > 0  ctOpts[:grouping] = ctGrouping  ok
+                if ctSmooth = true      ctOpts[:smooth]   = true        ok
+
+                writer.addChart(ctApiType, ctTitle, ctCats, ctSerList, ctOpts)
 
             elseif bType = "toc"
                 tocTitle = block[:title]

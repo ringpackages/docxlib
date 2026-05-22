@@ -1256,7 +1256,9 @@ func wrParseChartData relId, aRels, tempDir
         categories and values are flat lists of strings/numbers.
     */
     sep = wordGetSep()
-    result = [:type="chart", :title="", :series=[]]
+    result = [:type="chart", :title="", :series=[],
+             :grouping="", :smooth=false, :legendPos="r",
+             :showDataLabels=false, :barDir=""]
     chartXml = ""
     for rel in aRels
         if rel[:id] = relId
@@ -1398,6 +1400,64 @@ func wrParseChartData relId, aRels, tempDir
         serPos = serE
     end
     result[:series] = aSeries
+
+    # Grouping (clustered/stacked/percent/standard)
+    grpS = wrFindFrom(chartXml, "<c:grouping ", 1)
+    if grpS > 0
+        grpEl = substr(chartXml, grpS, 80)
+        result[:grouping] = wrAttr(grpEl, "val")
+    ok
+
+    # barDir: col = column chart, bar = horizontal bar chart
+    bdirS = wrFindFrom(chartXml, "<c:barDir ", 1)
+    if bdirS > 0
+        bdirEl = substr(chartXml, bdirS, 60)
+        result[:barDir] = wrAttr(bdirEl, "val")
+    ok
+
+    # Smooth (line charts)
+    smoothS = wrFindFrom(chartXml, "<c:smooth ", 1)
+    if smoothS > 0
+        smoothEl = substr(chartXml, smoothS, 60)
+        if wrAttr(smoothEl, "val") = "1"  result[:smooth] = true  ok
+    ok
+
+    # Legend position
+    lgpS = wrFindFrom(chartXml, "<c:legendPos ", 1)
+    if lgpS > 0
+        lgpEl = substr(chartXml, lgpS, 60)
+        result[:legendPos] = wrAttr(lgpEl, "val")
+    ok
+
+    # showDataLabels: check first <c:showVal val=...>
+    svS = wrFindFrom(chartXml, "<c:showVal ", 1)
+    if svS > 0
+        svEl = substr(chartXml, svS, 60)
+        if wrAttr(svEl, "val") = "1"  result[:showDataLabels] = true  ok
+    ok
+
+    # Per-series colors (first <a:srgbClr> per <c:ser>)
+    aSerColors = []
+    scPos = 1
+    while true
+        scS1 = wrFindFrom(chartXml, "<c:ser>", scPos)
+        scS2 = wrFindFrom(chartXml, "<c:ser ", scPos)
+        scS  = wrMinPos(scS1, scS2)
+        if scS = 0  break  ok
+        scE  = wrFindCloseTag(chartXml, "c:ser", scS)
+        if scE = 0  break  ok
+        serXml2 = substr(chartXml, scS, scE - scS)
+        clrS = wrFindFrom(serXml2, "<a:srgbClr ", 1)
+        if clrS > 0
+            clrEl = substr(serXml2, clrS, 60)
+            add(aSerColors, wrAttr(clrEl, "val"))
+        else
+            add(aSerColors, "")
+        ok
+        scPos = scE
+    end
+    result[:serColors] = aSerColors
+
     return result
 
 func wrExtractHeaderText hdrXml
