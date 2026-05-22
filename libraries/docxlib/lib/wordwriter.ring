@@ -3924,11 +3924,11 @@ class WordWriter
         ok
 
         # Vertical alignment for header and cells
+        # headerVAlign: only set when explicitly requested via options.
+        # Do not default to "center" - that overrides source vAlign for round-trip.
         headerVAlign = ""
         if options[:headerVAlign] != NULL
             headerVAlign = options[:headerVAlign]
-        elseif hasHeader
-            headerVAlign = "center"
         ok
         cellVAlign = ""
         if options[:cellVAlign] != NULL
@@ -3939,9 +3939,6 @@ class WordWriter
         headerHeight = 0
         if options[:headerHeight] != NULL
             headerHeight = options[:headerHeight]
-        elseif hasHeader and len(headerBgColor) > 0
-            # Default: give styled headers some height for visual comfort
-            headerHeight = 600   # ~0.33 inch / ~0.85 cm
         ok
 
         # Cell padding for headers (in twips)
@@ -4234,11 +4231,12 @@ class WordWriter
                     xml_ += '<w:p>'
 
                     if isHeader
-                        xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>'
+                        # Plain-string header: only center jc, no forced bold/white
+                        xml_ += '<w:pPr><w:jc w:val="center"/></w:pPr>'
                         if len(headerBgColor) > 0
                             xml_ += '<w:r><w:rPr><w:b/><w:color w:val="' + headerTextColor + '"/></w:rPr><w:t>' + wordXmlEsc(cellText) + '</w:t></w:r>'
                         else
-                            xml_ += '<w:r><w:rPr><w:b/></w:rPr><w:t>' + wordXmlEsc(cellText) + '</w:t></w:r>'
+                            xml_ += '<w:r><w:t>' + wordXmlEsc(cellText) + '</w:t></w:r>'
                         ok
                     else
                         cellJcXml3 = ""
@@ -4247,7 +4245,9 @@ class WordWriter
                         if len(cellVAlign) > 0 and isHeader  plainCellAlign = "center"  ok
                         if len(plainCellAlign) > 0  cellJcXml3 = '<w:jc w:val="' + plainCellAlign + '"/>'
                         ok
-                        xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>' + cellJcXml3 + '</w:pPr>'
+                        if len(cellJcXml3) > 0
+                            xml_ += '<w:pPr>' + cellJcXml3 + '</w:pPr>'
+                        ok
                         # Build run properties for conditional formatting
                         rPr = ""
                         if cfBold  rPr += '<w:b/><w:bCs/>'  ok
@@ -4511,11 +4511,11 @@ class WordWriter
         
         # --- Cell Content ---
         # Determine alignment
+        # Use only the cell's own alignment; do not default to center for headers.
+        # If the source had no alignment, leave it unset (inherit from style).
         cellAlign = ""
         if len(cellObj.cAlign) > 0
             cellAlign = cellObj.cAlign
-        elseif isHeader
-            cellAlign = "center"
         ok
         
         # Check if we have any images in the cell
@@ -4531,9 +4531,7 @@ class WordWriter
             
             # Paragraph properties (alignment + zero spacing for vAlign)
             if len(cellAlign) > 0
-                xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="' + cellAlign + '"/></w:pPr>'
-            else
-                xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
+                xml_ += '<w:pPr><w:jc w:val="' + cellAlign + '"/></w:pPr>'
             ok
             
             # Text runs
@@ -4562,12 +4560,10 @@ class WordWriter
                 if len(cellObj.aRunColor[runIdx]) > 0 hasFormatting = true ok
                 if len(cellObj.aRunHighlight[runIdx]) > 0 hasFormatting = true ok
                 
-                # For header rows without explicit formatting, add bold + white
-                if isHeader and !hasFormatting and len(headerBgColor) > 0
-                    rPr += '<w:b/>'
-                    rPr += '<w:color w:val="' + headerTextColor + '"/>'
-                elseif isHeader and !hasFormatting
-                    rPr += '<w:b/>'
+                # Preserve source run formatting as-is for header rows.
+                # The cell background (headerBgColor) provides visual distinction.
+                if false
+                    rPr += ''
                 else
                     # Build from parallel arrays
                     if cellObj.aRunBold[runIdx] = 1
@@ -4627,9 +4623,7 @@ class WordWriter
             if len(relId) > 0 and imgId > 0
                 xml_ += '<w:p>'
                 if len(cellAlign) > 0
-                    xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="' + cellAlign + '"/></w:pPr>'
-                else
-                    xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
+                    xml_ += '<w:pPr><w:jc w:val="' + cellAlign + '"/></w:pPr>'
                 ok
                 xml_ += '<w:r>'
                 xml_ += '<w:drawing>'
@@ -4720,7 +4714,6 @@ class WordWriter
             relId = cellObj.aCellLinkRelIds[hi]
             text = cellObj.aCellLinkTexts[hi]
             xml_ += '<w:p>'
-            xml_ += '<w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
             xml_ += '<w:hyperlink r:id="' + relId + '">'
             xml_ += '<w:r>'
             xml_ += '<w:rPr><w:color w:val="0563C1"/><w:u w:val="single"/></w:rPr>'
@@ -4741,7 +4734,7 @@ class WordWriter
         for ti = 1 to nTables
             xml_ += cellObj.aCellTableXml[ti]
             # Word requires a paragraph after a nested table inside a cell
-            xml_ += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:p>'
+            xml_ += '<w:p/>'
         next
         return xml_
 
@@ -5020,6 +5013,10 @@ class WordWriter
         c += '<w:style w:type="table" w:styleId="TableGrid">'
         c += '<w:name w:val="Table Grid"/>'
         c += '<w:basedOn w:val="TableNormal"/>'
+        # CRITICAL: pPr must come before tblPr to set default cell paragraph
+        # spacing to after=0 line=240, overriding the document default (after=160 line=259).
+        # Without this, table cells inherit docDefault spacing and rows become taller.
+        c += '<w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
         c += '<w:tblPr>'
         c += '<w:tblBorders>'
         c += '<w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>'
