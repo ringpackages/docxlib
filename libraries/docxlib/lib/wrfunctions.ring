@@ -689,6 +689,14 @@ func wrParseTextBoxes bodyXml
         ts = wrFindFrom(bodyXml, "<w:txbxContent>", pos)
         if ts = 0  ts = wrFindFrom(bodyXml, "<w:txbxContent ", pos)  ok
         if ts = 0  break  ok
+        # Skip txbxContent inside DrawingML shapes (wps:txbx context)
+        # Search backward from ts to check if we are inside a wps:txbx
+        scanBack = max(1, ts - 2000)
+        preCtx = substr(bodyXml, scanBack, ts - scanBack)
+        if wrFindFrom(preCtx, "<wps:txbx", 1) > 0
+            pos = ts + 1
+            loop
+        ok
         te = wrFindCloseTag(bodyXml, "w:txbxContent", ts)
         if te = 0  break  ok
         tbXml = substr(bodyXml, ts, te - ts)
@@ -1855,6 +1863,160 @@ func wrSplitBodyElements bodyXml
         
         remaining = substr(remaining, eEnd)
     end
+    return result
+
+
+func wrParseDrawingShape pXml
+    /*
+        Parse an mc:AlternateContent DrawingML shape paragraph.
+        Returns [:found, :shapeType, :widthCm, :heightCm,
+                 :fillColor, :noFill, :lineColor, :lineWidthPt, :noBorder,
+                 :text, :textColor, :textBold, :textSize, :align,
+                 :rounded]
+    */
+    result = [:found=false, :shapeType="rect", :widthCm=5.0, :heightCm=3.0,
+              :fillColor="4472C4", :noFill=false,
+              :lineColor="2E4E7E", :lineWidthPt=1.0, :noBorder=false,
+              :text="", :textColor="FFFFFF", :textBold=true, :textSize=11,
+              :align="center", :rounded=false]
+    # Must have mc:AlternateContent with wps:wsp inside mc:Choice
+    mcS = wrFindFrom(pXml, "<mc:AlternateContent", 1)
+    if mcS = 0  return result  ok
+    choiceS = wrFindFrom(pXml, "<mc:Choice", mcS)
+    if choiceS = 0  return result  ok
+    choiceE = wrFindFrom(pXml, "</mc:Choice>", choiceS)
+    if choiceE = 0  return result  ok
+    choiceXml = substr(pXml, choiceS, choiceE - choiceS + 12)
+    # Must contain wps:wsp (WordProcessingShape)
+    wspS = wrFindFrom(choiceXml, "<wps:wsp>", 1)
+    if wspS = 0  wspS = wrFindFrom(choiceXml, "<wps:wsp ", 1)  ok
+    if wspS = 0  return result  ok
+    result[:found] = true
+    # Shape type from prstGeom prst=
+    prstS = wrFindFrom(choiceXml, "prst=", 1)
+    if prstS > 0
+        prstEl = substr(choiceXml, prstS, 40)
+        prst = wrAttr(prstEl, "prst")
+        if len(prst) = 0
+            # try extracting value between quotes after prst=
+            q1 = wrFindFrom(prstEl, char(34), 5)
+            if q1 > 0
+                q2 = wrFindFrom(prstEl, char(34), q1+1)
+                if q2 > 0  prst = substr(prstEl, q1+1, q2-q1-1)  ok
+            ok
+        ok
+        if len(prst) > 0  result[:shapeType] = prst  ok
+    ok
+    # Size from a:ext cx/cy (in EMU: 914400 EMU = 1 inch = 2.54 cm)
+    extS = wrFindFrom(choiceXml, "<a:ext ", 1)
+    if extS > 0
+        extEl = substr(choiceXml, extS, 80)
+        cxStr = wrAttr(extEl, "cx")
+        cyStr = wrAttr(extEl, "cy")
+        if len(cxStr) > 0  result[:widthCm]  = number(cxStr) / 914400.0 * 2.54  ok
+        if len(cyStr) > 0  result[:heightCm] = number(cyStr) / 914400.0 * 2.54  ok
+    ok
+    # Fill: solidFill or noFill (check in spPr)
+    spPrS = wrFindFrom(choiceXml, "<wps:spPr>", 1)
+    if spPrS = 0  spPrS = wrFindFrom(choiceXml, "<wps:spPr ", 1)  ok
+    if spPrS > 0
+        spPrE = wrFindFrom(choiceXml, "</wps:spPr>", spPrS)
+        if spPrE > 0
+            spPrXml = substr(choiceXml, spPrS, spPrE - spPrS + 11)
+            # Check noFill ONLY before the <a:ln> border element
+            # (noFill inside <a:ln> means no border, not no fill)
+            lnPosForFill = wrFindFrom(spPrXml, "<a:ln", 1)
+            fillAreaXml = spPrXml
+            if lnPosForFill > 0
+                fillAreaXml = substr(spPrXml, 1, lnPosForFill - 1)
+            ok
+            if wrFindFrom(fillAreaXml, "<a:noFill/>", 1) > 0
+                result[:noFill] = true
+            else
+                fillS = wrFindFrom(spPrXml, "<a:solidFill>", 1)
+                if fillS > 0
+                    fillEl = substr(spPrXml, fillS, 100)
+                    fcS = wrFindFrom(fillEl, "val=", 1)
+                    if fcS > 0
+                        fcEl = substr(fillEl, fcS, 20)
+                        fc = wrAttr(fcEl, "val")
+                        if len(fc) > 0  result[:fillColor] = fc  ok
+                    ok
+                ok
+            ok
+            # Border: ln element
+            lnS = wrFindFrom(spPrXml, "<a:ln", 1)
+            if lnS > 0
+                lnEl = substr(spPrXml, lnS, 60)
+                lnWStr = wrAttr(lnEl, "w")
+                if len(lnWStr) > 0
+                    result[:lineWidthPt] = number(lnWStr) / 12700.0
+                ok
+                lnE = wrFindFrom(spPrXml, "</a:ln>", lnS)
+                if lnE > 0
+                    lnXml = substr(spPrXml, lnS, lnE - lnS + 7)
+                    if wrFindFrom(lnXml, "<a:noFill", 1) > 0
+                        result[:noBorder] = true
+                    else
+                        lcS = wrFindFrom(lnXml, "val=", 1)
+                        if lcS > 0
+                            lcEl = substr(lnXml, lcS, 20)
+                            lc = wrAttr(lcEl, "val")
+                            if len(lc) > 0  result[:lineColor] = lc  ok
+                        ok
+                    ok
+                ok
+            ok
+        ok
+    ok
+    # Text from wps:txbx
+    txS = wrFindFrom(choiceXml, "<wps:txbx>", 1)
+    if txS = 0  txS = wrFindFrom(choiceXml, "<wps:txbx ", 1)  ok
+    if txS > 0
+        txE = wrFindFrom(choiceXml, "</wps:txbx>", txS)
+        if txE > 0
+            txXml = substr(choiceXml, txS, txE - txS + 11)
+            # Extract all text
+            fullTxt = ""
+            tvPos = 1
+            while true
+                tvS = wrFindFrom(txXml, "<w:t>", tvPos)
+                if tvS = 0  tvS = wrFindFrom(txXml, "<w:t ", tvPos)  ok
+                if tvS = 0  break  ok
+                tvGt = wrFindFrom(txXml, ">", tvS)
+                tvE  = wrFindFrom(txXml, "</w:t>", tvGt)
+                if tvGt > 0 and tvE > 0
+                    fullTxt += substr(txXml, tvGt+1, tvE-tvGt-1)
+                ok
+                tvPos = tvE + 1
+            end
+            result[:text] = fullTxt
+            # Text color
+            tcS = wrFindFrom(txXml, "<w:color ", 1)
+            if tcS > 0
+                tcEl = substr(txXml, tcS, 40)
+                tc = wrAttr(tcEl, "w:val")
+                if len(tc) > 0  result[:textColor] = tc  ok
+            ok
+            # Text bold
+            result[:textBold] = wrFindFrom(txXml, "<w:b/>", 1) > 0 or
+                                 wrFindFrom(txXml, "<w:b ", 1) > 0
+            # Text size
+            tsS = wrFindFrom(txXml, "<w:sz ", 1)
+            if tsS > 0
+                tsEl = substr(txXml, tsS, 40)
+                tsV = wrAttr(tsEl, "w:val")
+                if len(tsV) > 0  result[:textSize] = floor(number(tsV) / 2)  ok
+            ok
+            # Alignment
+            alS = wrFindFrom(txXml, "<w:jc ", 1)
+            if alS > 0
+                alEl = substr(txXml, alS, 40)
+                alV = wrAttr(alEl, "w:val")
+                if len(alV) > 0  result[:align] = alV  ok
+            ok
+        ok
+    ok
     return result
 
 

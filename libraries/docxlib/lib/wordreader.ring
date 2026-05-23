@@ -1307,6 +1307,8 @@ class WordReader
         # Drawing / Image / Chart
         isImage     = false
         isChart     = false
+        isShape     = false
+        shapeData   = []
         chartRelId2 = ""
         chartWidthCm  = 0.0
         chartHeightCm = 0.0
@@ -1486,6 +1488,19 @@ class WordReader
                     # Size from extent (already extracted into imgWidthCm/imgHeightCm)
                     chartWidthCm  = imgWidthCm
                     chartHeightCm = imgHeightCm
+                ok
+            ok
+        ok
+
+        # DrawingML shape detection (mc:AlternateContent with wps:wsp)
+        # Must run even when isImage=true, because DrawingML shapes
+        # use <w:drawing> which the image detector picks up first.
+        if !isChart
+            if (wrFindFrom(pXml, "<mc:AlternateContent", 1) > 0) and (wrFindFrom(pXml, "wps:wsp", 1) > 0)
+                shapeData = wrParseDrawingShape(pXml)
+                if shapeData[:found] = true
+                    isShape = true
+                    isImage = false   # shape takes priority over image
                 ok
             ok
         ok
@@ -1743,9 +1758,31 @@ class WordReader
             return block
         ok
 
+        # Quick DrawingML shape check to avoid falsely returning "empty"
+        # before full shape detection runs below
+        hasMcShape = (wrFindFrom(pXml, "<mc:AlternateContent", 1) > 0) and (wrFindFrom(pXml, "wps:wsp", 1) > 0)
         if len(fullText) = 0 and !isImage and !isChart and !isHorizLine and !isListItem and
-           !hasNote and len(sectBreakType) = 0
+           !hasNote and len(sectBreakType) = 0 and !hasMcShape
             block[:type] = "empty"
+            return block
+        ok
+
+        if isShape
+            block[:type]           = "shape"
+            block[:shapeType]      = shapeData[:shapeType]
+            block[:widthCm]        = shapeData[:widthCm]
+            block[:heightCm]       = shapeData[:heightCm]
+            block[:fillColor]      = shapeData[:fillColor]
+            block[:noFill]         = shapeData[:noFill]
+            block[:lineColor]      = shapeData[:lineColor]
+            block[:lineWidthPt]    = shapeData[:lineWidthPt]
+            block[:noBorder]       = shapeData[:noBorder]
+            block[:text]           = shapeData[:text]
+            block[:textColor]      = shapeData[:textColor]
+            block[:textBold]       = shapeData[:textBold]
+            block[:textSize]       = shapeData[:textSize]
+            block[:align]          = shapeData[:align]
+            block[:bookmark]       = bookmarkName
             return block
         ok
 
@@ -5151,6 +5188,63 @@ class WordReader
 
             elseif bType = "columnbreak"
                 writer.addColumnBreak()
+
+            elseif bType = "shape"
+                # Round-trip DrawingML shape using addShape()
+                shpType  = block[:shapeType]
+                shpW     = block[:widthCm]
+                shpH     = block[:heightCm]
+                shpFill  = block[:fillColor]
+                shpNoFill= block[:noFill]
+                shpLnClr = block[:lineColor]
+                shpLnW   = block[:lineWidthPt]
+                shpNoBdr = block[:noBorder]
+                shpTxt   = block[:text]
+                shpTxtClr= block[:textColor]
+                shpTxtB  = block[:textBold]
+                shpTxtSz = block[:textSize]
+                shpAlign = block[:align]
+                if shpType  = NULL   shpType  = "rect"  ok
+                if shpW     = NULL   shpW     = 5.0     ok
+                if shpH     = NULL   shpH     = 3.0     ok
+                if shpFill  = NULL   shpFill  = "4472C4" ok
+                if shpNoFill= NULL   shpNoFill= false    ok
+                if shpLnClr = NULL   shpLnClr = "2E4E7E" ok
+                if shpLnW   = NULL   shpLnW   = 1.0     ok
+                if shpNoBdr = NULL   shpNoBdr = false    ok
+                if shpTxt   = NULL   shpTxt   = ""      ok
+                if shpTxtClr= NULL   shpTxtClr= "FFFFFF" ok
+                if shpTxtB  = NULL   shpTxtB  = true    ok
+                if shpTxtSz = NULL   shpTxtSz = 11      ok
+                if shpAlign = NULL   shpAlign = "center" ok
+                # Map prstGeom shape type to writer API type
+                apiShpType = shpType
+                if shpType = "roundRect"   apiShpType = "rect"  ok
+                if shpType = "rtTriangle"  apiShpType = "triangle"  ok
+                if shpType = "triangle"    apiShpType = "triangle"  ok
+                shpOpts = []
+                shpOpts[:width]     = shpW
+                shpOpts[:height]    = shpH
+                shpOpts[:align]     = shpAlign
+                if shpNoFill = true
+                    shpOpts[:noFill] = true
+                else
+                    shpOpts[:fillColor] = shpFill
+                ok
+                if shpNoBdr = true
+                    shpOpts[:noBorder] = true
+                else
+                    shpOpts[:lineColor]  = shpLnClr
+                    shpOpts[:lineWidth]  = shpLnW
+                ok
+                if shpType = "roundRect"  shpOpts[:rounded] = true  ok
+                if len(shpTxt) > 0
+                    shpOpts[:text]      = shpTxt
+                    shpOpts[:textColor] = shpTxtClr
+                    shpOpts[:textBold]  = shpTxtB
+                    shpOpts[:textSize]  = shpTxtSz
+                ok
+                writer.addShape(apiShpType, shpOpts)
 
             elseif bType = "chart"
                 # Round-trip chart using native addChart()
