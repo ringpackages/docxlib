@@ -716,21 +716,41 @@ class WordReader
                 if wrIsSelfClosingTag(pXml, 1)
                     loop
                 ok
-                # Intercept TOC field paragraphs
+                # Intercept TOC/SEQ field paragraphs + special-style paragraphs
                 isTOCPara = false
-                if wrFindFrom(pXml, "instrText", 1) > 0 and wrFindFrom(pXml, "MERGEFIELD", 1) = 0
-                    itS3 = wrFindFrom(pXml, "<w:instrText", 1)
-                    if itS3 > 0
-                        itE3 = wrFindFrom(pXml, "</w:instrText>", itS3)
-                        if itE3 > 0
-                            itTxt3 = substr(pXml, itS3, itE3 - itS3)
-                            if wrFindFrom(itTxt3, " TOC ", 1) > 0
-                                isTOCPara = true
-                                tocBlock3 = []
-                                tocBlock3[:type]     = "toc"
-                                tocBlock3[:title]    = cSrcTOCTitle
-                                tocBlock3[:bookmark] = ""
-                                aBlocks + tocBlock3
+                # TableOfFigures / Caption style paragraphs must be preserved verbatim
+                pStyleCheck = substr(pXml, 1, 300)
+                pStyleIsSpecial = (wrFindFrom(pStyleCheck, "TableOfFigures", 1) > 0) or
+                                  (wrFindFrom(pStyleCheck, "Caption", 1) > 0 and wrFindFrom(pStyleCheck, "pStyle", 1) > 0)
+                if pStyleIsSpecial
+                    isTOCPara = true
+                    rawBlock0 = [:type="rawparagraph", :rawXml=pXml, :text="", :bookmark=""]
+                    aBlocks + rawBlock0
+                ok
+                if !isTOCPara
+                    if wrFindFrom(pXml, "instrText", 1) > 0 and wrFindFrom(pXml, "MERGEFIELD", 1) = 0
+                        itS3 = wrFindFrom(pXml, "<w:instrText", 1)
+                        if itS3 > 0
+                            itE3 = wrFindFrom(pXml, "</w:instrText>", itS3)
+                            if itE3 > 0
+                                itTxt3 = substr(pXml, itS3, itE3 - itS3)
+                                isTocMain = (wrFindFrom(itTxt3, " TOC ", 1) > 0) and
+                                            (wrFindFrom(itTxt3, chr(92)+"o", 1) > 0 or
+                                             wrFindFrom(itTxt3, chr(92)+"h", 1) > 0 or
+                                             wrFindFrom(itTxt3, chr(92)+"u", 1) > 0 or
+                                             wrFindFrom(itTxt3, chr(92)+"z", 1) > 0)
+                                isTocCaption = (wrFindFrom(itTxt3, " TOC ", 1) > 0) and
+                                               (wrFindFrom(itTxt3, chr(92)+"c", 1) > 0)
+                                isSeqField = wrFindFrom(itTxt3, " SEQ ", 1) > 0
+                                if isTocMain
+                                    isTOCPara = true
+                                    tocBlock3 = [:type="toc", :title=cSrcTOCTitle, :bookmark=""]
+                                    aBlocks + tocBlock3
+                                elseif isTocCaption or isSeqField
+                                    isTOCPara = true
+                                    rawBlock3 = [:type="rawparagraph", :rawXml=pXml, :text="", :bookmark=""]
+                                    aBlocks + rawBlock3
+                                ok
                             ok
                         ok
                     ok
@@ -2034,7 +2054,10 @@ class WordReader
         # TOCHeading paragraphs: mark as tocheading so toWriter can skip
         # (addTOC() will add its own heading with the correct title)
         if styleName = "TOCHeading"
-            block[:type] = "tocheading"
+            # Preserve TOCHeading paragraphs verbatim (List of Figures,
+            # List of Tables, etc.). The main TOC title is handled by addTOC().
+            block[:type]   = "rawparagraph"
+            block[:rawXml] = pXml
         ok
         block[:align]           = alignVal
         block[:spaceBefore]     = spaceBefore

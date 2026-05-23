@@ -3224,6 +3224,13 @@ class WordWriter
 
                 on "field"
                     xml_ += generateField(item[:fieldType], item[:cachedValue], item[:options])
+                on "rawparagraph"
+                    # Emit the paragraph verbatim (preserves complex fields,
+                    # Caption/TableOfFigures styles, SEQ/TOC\c fields, etc.)
+                    rawPXml = item[:rawXml]
+                    if rawPXml != NULL and len(rawPXml) > 0
+                        xml_ += rawPXml
+                    ok
             off
         next
         
