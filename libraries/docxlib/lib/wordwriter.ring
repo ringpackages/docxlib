@@ -2062,6 +2062,15 @@ class WordWriter
         aContent + item
         return self
 
+    func addRawParagraph rawXml
+        /*
+            Insert a paragraph verbatim from source XML.
+            Used to preserve complex inline fields (REF, PAGEREF, etc.)
+            that cannot be fully reconstructed from parsed data alone.
+        */
+        aContent + [:type="rawparagraph", :rawXml=rawXml]
+        return self
+
     # ========================================================================
     # Hyperlinks
     # ========================================================================

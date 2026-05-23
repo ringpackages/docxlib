@@ -2469,6 +2469,29 @@ class WordReader
                     cpPos = wrSelfClosingEnd(tcXml, cpS)
                     loop
                 ok
+                # Skip paragraphs inside nested tables
+                preCtx2 = substr(tcXml, 1, cpS - 1)
+                tblO2 = 0  tblC2 = 0  scanP2 = 1
+                while true
+                    to2p = wrFindFrom(preCtx2, "<w:tbl>", scanP2)
+                    if to2p = 0  break  ok
+                    tblO2++  scanP2 = to2p + 1
+                end
+                scanP2 = 1
+                while true
+                    tc2p = wrFindFrom(preCtx2, "</w:tbl>", scanP2)
+                    if tc2p = 0  break  ok
+                    tblC2++  scanP2 = tc2p + 1
+                end
+                if tblO2 > tblC2
+                    nxtTblE2 = wrFindFrom(tcXml, "</w:tbl>", cpS)
+                    if nxtTblE2 > 0
+                        cpPos = nxtTblE2 + 8
+                    else
+                        cpPos = cpS + 1
+                    ok
+                    loop
+                ok
                 cpE = wrFindCloseTag(tcXml, "w:p", cpS)
                 if cpE = 0  break  ok
                 cpXml = substr(tcXml, cpS, cpE - cpS)
@@ -2620,7 +2643,8 @@ class WordReader
                 cpPos = cpE
             end
 
-            # Parse each cell paragraph as a full block for rich round-trip
+            # Parse each cell paragraph as a full block for rich round-trip.
+            # Only DIRECT paragraphs (not inside nested <w:tbl>) are included.
             cellParas = []
             cpPos3 = 1
             while true
@@ -2628,6 +2652,27 @@ class WordReader
                 cp3S2 = wrFindFrom(tcXml, "<w:p ", cpPos3)
                 cp3S  = wrMinPos(cp3S1, cp3S2)
                 if cp3S = 0  break  ok
+                # Count nested table opens/closes before this position
+                preCtx3 = substr(tcXml, 1, cp3S - 1)
+                tblO3 = 0  tblScan3 = 1
+                while true
+                    to3 = wrFindFrom(preCtx3, "<w:tbl>", tblScan3)
+                    if to3 = 0  break  ok
+                    tblO3++  tblScan3 = to3 + 1
+                end
+                tblC3 = 0  tblScan3 = 1
+                while true
+                    tc3 = wrFindFrom(preCtx3, "</w:tbl>", tblScan3)
+                    if tc3 = 0  break  ok
+                    tblC3++  tblScan3 = tc3 + 1
+                end
+                if tblO3 > tblC3
+                    # Inside nested table - skip to after next </w:tbl>
+                    nxtTblE3 = wrFindFrom(tcXml, "</w:tbl>", cp3S)
+                    if nxtTblE3 > 0  cpPos3 = nxtTblE3 + 8
+                    else  cpPos3 = cp3S + 1  ok
+                    loop
+                ok
                 if wrIsSelfClosingTag(tcXml, cp3S)
                     cpPos3 = wrSelfClosingEnd(tcXml, cp3S)
                     loop
@@ -4328,6 +4373,10 @@ class WordReader
         ok
 
         # Page setup - pass exact page size (in twips) from source document
+        # Set orientation FIRST (it swaps dims), then override with actual source dims
+        if cSrcOrientation = "landscape"
+            writer.setOrientation("landscape")
+        ok
         writer.setCustomPageSize(nPageWidth/567.0, nPageHeight/567.0)
         # Pass source document default paragraph spacing so output matches
         if nDocSpacingAfter >= 0 and nDocSpacingLine > 0
@@ -4336,9 +4385,6 @@ class WordReader
         # Pass source styles.xml and theme1.xml for round-trip fidelity
         if len(cSrcStylesXml) > 0  writer.useSourceStyles(cSrcStylesXml)  ok
         if len(cSrcThemeXml)  > 0  writer.useSourceTheme(cSrcThemeXml)    ok
-        if cSrcOrientation = "landscape"
-            writer.setOrientation("landscape")
-        ok
         writer.setMargins(nMarginTop/567.0, nMarginBottom/567.0,
                           nMarginLeft/567.0, nMarginRight/567.0)
         writer.setHeaderFooterMargins(nHeaderMargin, nFooterMargin)
@@ -4909,11 +4955,52 @@ class WordReader
                                                     if isMC2 = true
                                                         ntRow2 + wordCell("", [])
                                                     else
-                                                        wcnt2 = wordCell(nt_c2[:text], [])
-                                                        bg2 = nt_c2[:bgColor]
-                                                        if bg2 != NULL and len(bg2) > 0
-                                                            wcnt2.cBgColor = bg2
+                                                        # Build nested cell with formatting from cellParas or runs
+                                                        nt_txt2  = nt_c2[:text]
+                                                        nt_isBold2 = false
+                                                        nt_clr2    = ""
+                                                        nt_aln2    = nt_c2[:align]
+                                                        if nt_aln2 = NULL  nt_aln2 = ""  ok
+                                                        # Try cellParas first for richer formatting
+                                                        ntCPs2 = nt_c2[:cellParas]
+                                                        if isList(ntCPs2) and len(ntCPs2) > 0
+                                                            ntCP2 = ntCPs2[1]
+                                                            if isList(ntCP2)
+                                                                cpAln2 = ntCP2[:align]
+                                                                if cpAln2 != NULL and len(cpAln2) > 0
+                                                                    nt_aln2 = cpAln2
+                                                                ok
+                                                                cpRuns2 = ntCP2[:runs]
+                                                                if isList(cpRuns2) and len(cpRuns2) > 0
+                                                                    cpr2 = cpRuns2[1]
+                                                                    if isList(cpr2)
+                                                                        if cpr2[:bold] = true  nt_isBold2 = true  ok
+                                                                        cpClr2 = cpr2[:color]
+                                                                        if cpClr2 != NULL and len(cpClr2) > 0  nt_clr2 = cpClr2  ok
+                                                                    ok
+                                                                ok
+                                                            ok
                                                         ok
+                                                        # Fall back to runs
+                                                        if !nt_isBold2 and nt_clr2 = ""
+                                                            ntRuns2 = nt_c2[:runs]
+                                                            if isList(ntRuns2) and len(ntRuns2) > 0
+                                                                nr2 = ntRuns2[1]
+                                                                if isList(nr2)
+                                                                    if nr2[:bold] = true  nt_isBold2 = true  ok
+                                                                    ntClr2 = nr2[:color]
+                                                                    if ntClr2 != NULL and len(ntClr2) > 0 and ntClr2 != "auto"  nt_clr2 = ntClr2  ok
+                                                                ok
+                                                            ok
+                                                        ok
+                                                        # Build wordCell with formatting options
+                                                        nt_rOpts2 = []
+                                                        if nt_isBold2  nt_rOpts2[:bold] = true  ok
+                                                        if len(nt_clr2) > 0  nt_rOpts2[:color] = nt_clr2  ok
+                                                        wcnt2 = wordCell(nt_txt2, nt_rOpts2)
+                                                        bg2 = nt_c2[:bgColor]
+                                                        if bg2 != NULL and len(bg2) > 0  wcnt2.cBgColor = bg2  ok
+                                                        if len(nt_aln2) > 0  wcnt2.cAlign = nt_aln2  ok
                                                         ntRow2 + wcnt2
                                                     ok
                                                 ok
@@ -4922,7 +5009,18 @@ class WordReader
                                         ntData2 + ntRow2
                                     next
                                     if len(ntData2) > 0
-                                        ntXml2 = writer.generateNestedTable(ntData2, [:borderStyle="single", :headerRow=false])
+                                        # Detect header row from nested table properties
+                                        ntHdrBg2 = ntObj2[:headerBg]
+                                        if ntHdrBg2 = NULL  ntHdrBg2 = ""  ok
+                                        ntHasHdr2 = len(ntHdrBg2) > 0
+                                        ntOpts2 = [:borderStyle="single", :headerRow=ntHasHdr2]
+                                        if ntHasHdr2  ntOpts2[:headerBgColor] = ntHdrBg2  ok
+                                        # Also pass nested table style
+                                        ntStyle2 = ntObj2[:tblStyle]
+                                        if ntStyle2 != NULL and len(ntStyle2) > 0
+                                            ntOpts2[:tblStyle] = ntStyle2
+                                        ok
+                                        ntXml2 = writer.generateNestedTable(ntData2, ntOpts2)
                                         wc.addCellTable(ntXml2)
                                     ok
                                 ok
@@ -5418,6 +5516,13 @@ class WordReader
                 if ctBubble3D = true      ctOpts[:bubble3D]      = true           ok
 
                 writer.addChart(ctApiType, ctTitle, ctCats, ctSerList, ctOpts)
+
+            elseif bType = "rawparagraph"
+                # Preserve REF/PAGEREF field paragraphs verbatim
+                rawXml2 = block[:rawXml]
+                if rawXml2 != NULL and len(rawXml2) > 0
+                    writer.addRawParagraph(rawXml2)
+                ok
 
             elseif bType = "toc"
                 tocTitle = block[:title]
