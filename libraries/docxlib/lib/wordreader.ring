@@ -66,6 +66,11 @@ class WordReader
     bSrcWatermark       # true if a text watermark was detected
     cSrcWatermarkText   # watermark string
     cSrcWatermarkColor  # hex color
+    bSrcImgWatermark    # true if an image watermark was detected
+    cSrcImgWatermarkPath # path to the source image watermark file
+    nSrcImgWatermarkOpacity  # image watermark opacity 0-100
+    nSrcImgWatermarkWidthCm  # display width in cm
+    nSrcImgWatermarkHeightCm # display height in cm
     nSrcWatermarkOpacity  # 0-100
     nSrcWatermarkRotation # degrees
     cSrcWatermarkFont   # font family
@@ -132,6 +137,11 @@ class WordReader
         bSrcWatermark       = false
         cSrcWatermarkText   = ""
         cSrcWatermarkColor  = "C0C0C0"
+        bSrcImgWatermark    = false
+        cSrcImgWatermarkPath = ""
+        nSrcImgWatermarkOpacity  = 50
+        nSrcImgWatermarkWidthCm  = 15
+        nSrcImgWatermarkHeightCm = 15
         nSrcWatermarkOpacity  = 50
         nSrcWatermarkRotation = -45
         cSrcWatermarkFont   = "Arial"
@@ -490,6 +500,33 @@ class WordReader
             nSrcWatermarkRotation= wmResult[:rotation]
             cSrcWatermarkFont    = wmResult[:font]
             nSrcWatermarkSize    = wmResult[:size]
+        ok
+
+        # Image watermark detection from header XML + rels
+        imgWmResult = wrParseImageWatermark(cSrcRawHeaderXml)
+        if imgWmResult[:found] = true
+            imgRelId = imgWmResult[:relId]
+            imgWmPath = ""
+            hdrRelsPath = cTempDir + "word" + sep + "_rels" + sep + "header1.xml.rels"
+            if fexists(hdrRelsPath)
+                hdrRelsXml = read(hdrRelsPath)
+                relS = wrFindFrom(hdrRelsXml, "Id=" + char(34) + imgRelId + char(34), 1)
+                if relS > 0
+                    relEl = substr(hdrRelsXml, relS, 200)
+                    relTarget = wrAttr(relEl, "Target")
+                    if len(relTarget) > 0
+                        imgWmPath = cTempDir + "word" + sep + relTarget
+                    ok
+                ok
+            ok
+            if len(imgWmPath) > 0 and fexists(imgWmPath)
+                bSrcImgWatermark = true
+                cSrcImgWatermarkPath = imgWmPath
+                nSrcImgWatermarkOpacity = imgWmResult[:opacity]
+                # Convert pt to cm (1cm = 28.35pt)
+                nSrcImgWatermarkWidthCm  = imgWmResult[:widthPt]  / 28.35
+                nSrcImgWatermarkHeightCm = imgWmResult[:heightPt] / 28.35
+            ok
         ok
 
         # TOC detection
@@ -4176,6 +4213,15 @@ class WordReader
                       :rotation=nSrcWatermarkRotation, :font=cSrcWatermarkFont,
                       :size=nSrcWatermarkSize]
             writer.setWatermark(cSrcWatermarkText, wmOpts)
+        ok
+        # Image watermark round-trip
+        if bSrcImgWatermark = true and len(cSrcImgWatermarkPath) > 0
+            if fexists(cSrcImgWatermarkPath)
+                imgWmOpts = [:opacity=nSrcImgWatermarkOpacity,
+                             :width=nSrcImgWatermarkWidthCm,
+                             :height=nSrcImgWatermarkHeightCm]
+                writer.setImageWatermark(cSrcImgWatermarkPath, imgWmOpts)
+            ok
         ok
 
         # Page setup - pass exact page size (in twips) from source document

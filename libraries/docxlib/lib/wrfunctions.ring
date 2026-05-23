@@ -969,89 +969,160 @@ func wrDetectTOC bodyXml
 func wrParseWatermark headerXml
     /*
         Detect and extract a VML text watermark from header XML.
+        Correctly handles documents that also contain an image watermark
+        by finding the shape that contains <v:textpath> rather than the first shape.
         Returns [:found, :text, :color, :opacity, :rotation, :font, :size]
     */
     result = [:found=false, :text="", :color="C0C0C0",
               :opacity=50, :rotation=-45, :font="Arial", :size=72]
-    # Must contain a v:textpath (VML watermark)
+    # Must contain a v:textpath (VML text watermark)
     tpS = wrFindFrom(headerXml, "<v:textpath ", 1)
     if tpS = 0  return result  ok
-    tpEl = substr(headerXml, tpS, 300)
+    tpEl = substr(headerXml, tpS, 500)
     wText = wrAttr(tpEl, "string")
     if len(wText) = 0  return result  ok
     result[:found] = true
     result[:text]  = wrXmlUnescape(wText)
-    # Shape for color/opacity/rotation
-    shpS = wrFindFrom(headerXml, "<v:shape ", 1)
-    if shpS > 0
-        shpEl = substr(headerXml, shpS, 500)
-        fc = wrAttr(shpEl, "fillcolor")
-        if len(fc) > 1 and left(fc,1) = "#"  result[:color] = substr(fc, 2)  ok
-        # Rotation from style
-        stS = wrFindFrom(shpEl, "rotation:", 1)
-        if stS > 0
-            rotStr = ""
-            i2 = stS + 9
-            c2start = substr(shpEl, i2, 1)
-            if c2start = "-"  rotStr = "-"  i2++  ok
-            shpElLen = len(shpEl)
-            while i2 <= shpElLen and i2 <= stS + 20
-                c2 = substr(shpEl, i2, 1)
-                if ascii(c2) >= ascii("0") and ascii(c2) <= ascii("9")  rotStr += c2
-                else  break  ok
-                i2++
-            end
-            if len(rotStr) > 0 and rotStr != "-"  result[:rotation] = number(rotStr)  ok
-        ok
-    ok
-    # Opacity from v:fill
-    fillS = wrFindFrom(headerXml, "<v:fill ", 1)
-    if fillS > 0
-        fillEl = substr(headerXml, fillS, 150)
-        opStr = wrAttr(fillEl, "opacity")
-        if len(opStr) > 0
-            result[:opacity] = floor(number(opStr) * 100)
-        ok
-    ok
-    # Font from v:textpath style (value may be &quot;FontName&quot; or plain FontName)
-    stpS = wrFindFrom(tpEl, "font-family:", 1)
-    if stpS > 0
-        fontStr = ""
-        afterColon = substr(tpEl, stpS + 12)
-        if left(afterColon, 6) = "&quot;"
-            # Font name enclosed in &quot; ... &quot;
-            inner = substr(afterColon, 7)
-            closeQ = wrFindFrom(inner, "&quot;", 1)
-            if closeQ > 0
-                fontStr = substr(inner, 1, closeQ - 1)
-            ok
-        else
-            i3 = stpS + 12
-            tpElLen = len(tpEl)
-            while i3 <= tpElLen and i3 <= stpS + 60
-                c3 = substr(tpEl, i3, 1)
-                if c3 = ";" or c3 = char(34) or c3 = "'"  break  ok
-                fontStr += c3
-                i3++
-            end
-        ok
-        if len(fontStr) > 0  result[:font] = fontStr  ok
-    ok
-    # Size from font-size
-    szS = wrFindFrom(tpEl, "font-size:", 1)
-    if szS > 0
-        szStr = ""
-        i4 = szS + 10
-        tpElLen = len(tpEl)
-        while i4 <= tpElLen and i4 <= szS + 10
-            c4 = substr(tpEl, i4, 1)
-            if ascii(c4) >= ascii("0") and ascii(c4) <= ascii("9")  szStr += c4
-            else  break  ok
-            i4++
+    # Extract font/size from textpath style attribute
+    stAttr = wrAttr(tpEl, "style")
+    if len(stAttr) > 0
+        # Unescape &quot; -> " before processing so semicolons are not confused
+        stAttrU = stAttr
+        while wrFindFrom(stAttrU, "&quot;", 1) > 0
+            qp = wrFindFrom(stAttrU, "&quot;", 1)
+            stAttrU = substr(stAttrU, 1, qp-1) + char(34) + substr(stAttrU, qp+6)
         end
-        if len(szStr) > 0  result[:size] = number(szStr)  ok
+        ffPos = wrFindFrom(stAttrU, "font-family:", 1)
+        if ffPos > 0
+            ffRaw = substr(stAttrU, ffPos + 12)
+            ffEnd = wrFindFrom(ffRaw, ";", 1)
+            if ffEnd > 0  ffRaw = substr(ffRaw, 1, ffEnd-1)  ok
+            ffRaw = trim(ffRaw)
+            # Strip surrounding " chars (already unescaped from &quot;)
+            if len(ffRaw) > 1 and left(ffRaw,1) = char(34)
+                ffRaw = substr(ffRaw, 2)
+                if len(ffRaw) > 0 and right(ffRaw,1) = char(34)
+                    ffRaw = substr(ffRaw, 1, len(ffRaw)-1)
+                ok
+            ok
+            if len(ffRaw) > 0  result[:font] = ffRaw  ok
+        ok
     ok
+    # Find the shape containing this v:textpath (search BACKWARD from tpS)
+    # to get the correct fillcolor and rotation
+    shpSearch = tpS
+    while shpSearch > 4
+        shpSearch--
+        if substr(headerXml, shpSearch, 8) = "<v:shape"
+            shpEl = substr(headerXml, shpSearch, 600)
+            fc = wrAttr(shpEl, "fillcolor")
+            if len(fc) > 1 and left(fc,1) = "#"  result[:color] = substr(fc, 2)  ok
+            # Rotation from style
+            stPos = wrFindFrom(shpEl, "rotation:", 1)
+            if stPos > 0
+                rotStr = ""
+                i2 = stPos + 9
+                if substr(shpEl, i2, 1) = "-"  rotStr = "-"  i2++  ok
+                shpElLen = len(shpEl)
+                while i2 <= shpElLen and i2 <= stPos + 20
+                    c2 = substr(shpEl, i2, 1)
+                    if ascii(c2) >= ascii("0") and ascii(c2) <= ascii("9")  rotStr += c2
+                    else  break  ok
+                    i2++
+                end
+                if len(rotStr) > 0 and rotStr != "-"
+                    result[:rotation] = number(rotStr)
+                ok
+            ok
+            # Opacity from <v:fill> opacity attribute
+            fillS = wrFindFrom(shpEl, "<v:fill ", 1)
+            if fillS > 0
+                fillEl = substr(shpEl, fillS, 100)
+                opVal = wrAttr(fillEl, "opacity")
+                if len(opVal) > 0  result[:opacity] = floor(number(opVal) * 100)  ok
+            ok
+            exit
+        ok
+    end
     return result
+
+func wrParseImageWatermark headerXml
+    /*
+        Detect and extract a VML image watermark from header XML.
+        Returns [:found, :relId, :opacity, :widthPt, :heightPt]
+    */
+    result = [:found=false, :relId="", :opacity=20, :widthPt=396, :heightPt=396]
+    # Image watermark uses type="#_x0000_t75" (picture/image VML shape)
+    # and contains <v:imagedata r:id="...">
+    imgS = wrFindFrom(headerXml, "<v:imagedata ", 1)
+    if imgS = 0  return result  ok
+    imgEl = substr(headerXml, imgS, 200)
+    relId = wrAttr(imgEl, "r:id")
+    if len(relId) = 0  return result  ok
+    result[:found] = true
+    result[:relId] = relId
+    # Find the containing shape for opacity and size
+    shpSearch = imgS
+    while shpSearch > 4
+        shpSearch--
+        if substr(headerXml, shpSearch, 8) = "<v:shape"
+            shpEl = substr(headerXml, shpSearch, 400)
+            # Get style for opacity and dimensions
+            stPos = wrFindFrom(shpEl, "style=", 1)
+            if stPos > 0
+                stEl = substr(shpEl, stPos, 300)
+                # opacity:0.20 in style
+                opPos = wrFindFrom(stEl, "opacity:", 1)
+                if opPos > 0
+                    opStr = ""
+                    i3 = opPos + 8
+                    stElLen = len(stEl)
+                    while i3 <= stElLen and i3 <= opPos + 15
+                        c3 = substr(stEl, i3, 1)
+                        if (ascii(c3) >= ascii("0") and ascii(c3) <= ascii("9")) or c3 = "."
+                            opStr += c3
+                        else
+                            break
+                        ok
+                        i3++
+                    end
+                    if len(opStr) > 0
+                        result[:opacity] = floor(number(opStr) * 100)
+                    ok
+                ok
+                # width:NNNpt  height:NNNpt
+                wPos = wrFindFrom(stEl, "width:", 1)
+                if wPos > 0
+                    wStr = ""
+                    i4 = wPos + 6
+                    stElLen2 = len(stEl)
+                    while i4 <= stElLen2 and i4 <= wPos + 12
+                        c4 = substr(stEl, i4, 1)
+                        if ascii(c4) >= ascii("0") and ascii(c4) <= ascii("9")  wStr += c4
+                        else  break  ok
+                        i4++
+                    end
+                    if len(wStr) > 0  result[:widthPt] = number(wStr)  ok
+                ok
+                hPos = wrFindFrom(stEl, "height:", 1)
+                if hPos > 0
+                    hStr = ""
+                    i5 = hPos + 7
+                    stElLen3 = len(stEl)
+                    while i5 <= stElLen3 and i5 <= hPos + 12
+                        c5 = substr(stEl, i5, 1)
+                        if ascii(c5) >= ascii("0") and ascii(c5) <= ascii("9")  hStr += c5
+                        else  break  ok
+                        i5++
+                    end
+                    if len(hStr) > 0  result[:heightPt] = number(hStr)  ok
+                ok
+            ok
+            exit
+        ok
+    end
+    return result
+
 
 func wrParseRowProps trXml
     /*
