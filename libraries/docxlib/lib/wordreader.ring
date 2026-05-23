@@ -1744,6 +1744,72 @@ class WordReader
             end
         ok
 
+        # --- Inline SDT (content control) detection ---
+        # Check for inline <w:sdt> inside this paragraph
+        if (wrFindFrom(pXml, "<w:sdt>", 1) > 0 or
+            wrFindFrom(pXml, "<w:sdt ", 1) > 0)
+            inSdtS = wrFindFrom(pXml, "<w:sdt>", 1)
+            if inSdtS = 0  inSdtS = wrFindFrom(pXml, "<w:sdt ", 1)  ok
+            if inSdtS > 0
+                inSdtE = wrFindCloseTag(pXml, "w:sdt", inSdtS)
+                if inSdtE > 0
+                    inSdtXml = substr(pXml, inSdtS, inSdtE - inSdtS)
+                    inSdtInfo = wrParseSdtBlock(inSdtXml)
+                    inSdtType = inSdtInfo[:type]
+                    if inSdtType = "checkbox" or inSdtType = "dropdown"
+                       or inSdtType = "text"
+                        # For checkbox: label is text OUTSIDE the SDT in this para
+                        inSdtLabel = inSdtInfo[:label]
+                        if inSdtType = "checkbox"
+                            # Collect text from runs outside the SDT
+                            outsideText = ""
+                            # Text before SDT
+                            preXml = substr(pXml, 1, inSdtS - 1)
+                            tPrePos = 1
+                            while true
+                                tpS1 = wrFindFrom(preXml, "<w:t>", tPrePos)
+                                tpS2 = wrFindFrom(preXml, "<w:t ", tPrePos)
+                                tpS  = wrMinPos(tpS1, tpS2)
+                                if tpS = 0  break  ok
+                                tpGt = wrFindFrom(preXml, ">", tpS)
+                                tpE  = wrFindFrom(preXml, "</w:t>", tpGt)
+                                if tpGt > 0 and tpE > 0
+                                    outsideText += wrXmlUnescape(substr(preXml, tpGt+1, tpE-tpGt-1))
+                                ok
+                                tPrePos = tpE + 1
+                            end
+                            # Text after SDT
+                            postXml = substr(pXml, inSdtE)
+                            tPostPos = 1
+                            while true
+                                tpS1 = wrFindFrom(postXml, "<w:t>", tPostPos)
+                                tpS2 = wrFindFrom(postXml, "<w:t ", tPostPos)
+                                tpS  = wrMinPos(tpS1, tpS2)
+                                if tpS = 0  break  ok
+                                tpGt = wrFindFrom(postXml, ">", tpS)
+                                tpE  = wrFindFrom(postXml, "</w:t>", tpGt)
+                                if tpGt > 0 and tpE > 0
+                                    outsideText += wrXmlUnescape(substr(postXml, tpGt+1, tpE-tpGt-1))
+                                ok
+                                tPostPos = tpE + 1
+                            end
+                            outsideText = trim(outsideText)
+                            if len(outsideText) > 0  inSdtLabel = outsideText  ok
+                        ok
+                        block[:type]        = "formfield"
+                        block[:fieldType]   = inSdtType
+                        block[:label]       = inSdtLabel
+                        block[:checked]     = inSdtInfo[:checked]
+                        block[:choices]     = inSdtInfo[:choices]
+                        block[:default]     = inSdtInfo[:default]
+                        block[:placeholder] = inSdtInfo[:placeholder]
+                        block[:bookmark]    = bookmarkName
+                        return block
+                    ok
+                ok
+            ok
+        ok
+
         # --- Block assembly ---
         if len(sectBreakType) > 0
             block[:type]               = "sectionbreak"
@@ -5373,13 +5439,15 @@ class WordReader
                     if !isList(chs)  chs = []  ok
                     if dflt = NULL  dflt = ""  ok
                     if len(chs) = 0  chs = [dflt]  ok
-                    writer.addDropdown(lbl, chs, dflt)
+                    # Pass "" label: preceding paragraph already has the label
+                    writer.addDropdown("", chs, dflt)
                 elseif ft = "text"
                     dflt2 = block[:default]
                     ph2   = block[:placeholder]
                     if dflt2 = NULL  dflt2 = ""  ok
                     if ph2   = NULL  ph2   = ""  ok
-                    writer.addTextInput(lbl, dflt2, ph2)
+                    # Pass "" label: preceding paragraph already has the label
+                    writer.addTextInput("", dflt2, ph2)
                 else
                     writer.addParagraph("[Form field: " + ft + "] " + lbl, [:italic=true, :color="888888"])
                 ok

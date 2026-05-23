@@ -859,11 +859,12 @@ func wrParseSdtBlock sdtXml
             if result[:type] = "unknown"
                 if wrFindFrom(prXml, "<w:text>",  1) > 0 or
                    wrFindFrom(prXml, "<w:text ",  1) > 0 or
+                   wrFindFrom(prXml, "<w:text/>", 1) > 0 or
                    wrFindFrom(prXml, "PlainText",  1) > 0
                     result[:type] = "text"
                 ok
             ok
-            # Get tag/alias as label hint
+            # Get tag/alias as label
             tagS = wrFindFrom(prXml, "<w:tag ", 1)
             if tagS > 0
                 tagEl = substr(prXml, tagS, 80)
@@ -871,6 +872,13 @@ func wrParseSdtBlock sdtXml
                 if len(tv) > 0 and result[:type] = "unknown"
                     if tv = "toc" or tv = "TOC"  result[:type] = "toc"  ok
                 ok
+            ok
+            # Get alias as label (preferred over content text)
+            aliasS = wrFindFrom(prXml, "<w:alias ", 1)
+            if aliasS > 0
+                aliasEl = substr(prXml, aliasS, 120)
+                aliasV = wrAttr(aliasEl, "w:val")
+                if len(aliasV) > 0  result[:label] = aliasV  ok
             ok
             # Placeholder text
             phS = wrFindFrom(prXml, "<w:placeholder>", 1)
@@ -910,6 +918,7 @@ func wrParseSdtBlock sdtXml
                 tPos = tE + 1
             end
             result[:default] = txt
+            # Only use content as label if no alias was found
             if len(result[:label]) = 0  result[:label] = txt  ok
         ok
     ok
