@@ -1716,6 +1716,8 @@ class WordReader
             chartData2 = wrParseChartData(chartRelId2, aRelationships, cTempDir)
             block[:type]            = "chart"
             block[:chartType]       = chartData2[:type]
+            block[:chartScatterStyle] = chartData2[:scatterStyle]
+            block[:chartBubble3D]     = chartData2[:bubble3D]
             block[:chartTitle]      = chartData2[:title]
             block[:chartData]       = chartData2[:series]
             block[:chartGrouping]   = chartData2[:grouping]
@@ -5140,7 +5142,13 @@ class WordReader
                 elseif ctRaw = "areaChart"     ctApiType = "area"
                 elseif ctRaw = "pieChart"      ctApiType = "pie"
                 elseif ctRaw = "doughnutChart" ctApiType = "doughnut"
+                elseif ctRaw = "scatterChart"  ctApiType = "scatter"
+                elseif ctRaw = "bubbleChart"   ctApiType = "bubble"
                 else  ctApiType = "column"  ok
+                ctScatterStyle = block[:chartScatterStyle]
+                ctBubble3D     = block[:chartBubble3D]
+                if ctScatterStyle = NULL  ctScatterStyle = "marker"  ok
+                if ctBubble3D     = NULL  ctBubble3D     = false     ok
 
                 # Build categories from first series (all share same cats)
                 ctCats = []
@@ -5160,6 +5168,27 @@ class WordReader
                         serIdx2++
                         if isList(cser2)
                             sEntry = [:name=cser2[:name], :values=cser2[:values]]
+                            # For scatter/bubble: include xValues, yValues, sizes
+                            cXVals = cser2[:xValues]
+                            cYVals = cser2[:yValues]
+                            cSizes = cser2[:sizes]
+                            cMrkSt = cser2[:markerStyle]
+                            cMrkSz = cser2[:markerSize]
+                            if isList(cXVals) and len(cXVals) > 0
+                                sEntry[:xValues] = cXVals
+                            ok
+                            if isList(cYVals) and len(cYVals) > 0
+                                sEntry[:yValues] = cYVals
+                            ok
+                            if isList(cSizes) and len(cSizes) > 0
+                                sEntry[:sizes] = cSizes
+                            ok
+                            if cMrkSt != NULL and len(cMrkSt) > 0
+                                sEntry[:markerStyle] = cMrkSt
+                            ok
+                            if isNumber(cMrkSz) and cMrkSz > 0
+                                sEntry[:markerSize] = cMrkSz
+                            ok
                             if serIdx2 <= len(ctSerColors)
                                 sc2 = ctSerColors[serIdx2]
                                 if sc2 != NULL and len(sc2) > 0
@@ -5175,8 +5204,12 @@ class WordReader
                 ctOpts = [:widthCm=cw, :heightCm=ch,
                           :centered=true, :legendPos=ctLegendPos,
                           :showDataLabels=ctShowLabels]
-                if len(ctGrouping) > 0  ctOpts[:grouping] = ctGrouping  ok
-                if ctSmooth = true      ctOpts[:smooth]   = true        ok
+                if len(ctGrouping) > 0    ctOpts[:grouping]      = ctGrouping     ok
+                if ctSmooth = true        ctOpts[:smooth]        = true           ok
+                if len(ctScatterStyle) > 0 and ctScatterStyle != "marker"
+                    ctOpts[:scatterStyle] = ctScatterStyle
+                ok
+                if ctBubble3D = true      ctOpts[:bubble3D]      = true           ok
 
                 writer.addChart(ctApiType, ctTitle, ctCats, ctSerList, ctOpts)
 

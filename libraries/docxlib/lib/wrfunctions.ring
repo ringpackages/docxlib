@@ -1295,7 +1295,8 @@ func wrParseChartData relId, aRels, tempDir
     sep = wordGetSep()
     result = [:type="chart", :title="", :series=[],
              :grouping="", :smooth=false, :legendPos="r",
-             :showDataLabels=false, :barDir=""]
+             :showDataLabels=false, :barDir="",
+             :scatterStyle="marker", :bubble3D=false]
     chartXml = ""
     for rel in aRels
         if rel[:id] = relId
@@ -1432,7 +1433,99 @@ func wrParseChartData relId, aRels, tempDir
             ok
         ok
 
-        ser = [:name=serName, :categories=aCats, :values=aVals]
+        # xVal (scatter/bubble X values)
+        aXVals = []
+        xvS = wrFindFrom(serXml, "<c:xVal>", 1)
+        if xvS = 0  xvS = wrFindFrom(serXml, "<c:xVal ", 1)  ok
+        if xvS > 0
+            xvE = wrFindCloseTag(serXml, "c:xVal", xvS)
+            if xvE > 0
+                xvXml = substr(serXml, xvS, xvE - xvS)
+                xvPos = 1
+                while true
+                    xvvS = wrFindFrom(xvXml, "<c:v>", xvPos)
+                    if xvvS = 0  break  ok
+                    xvvE = wrFindFrom(xvXml, "</c:v>", xvvS)
+                    if xvvE > 0
+                        add(aXVals, wrXmlUnescape(substr(xvXml, xvvS+5, xvvE-xvvS-5)))
+                        xvPos = xvvE + 1
+                    else
+                        xvPos = xvvS + 1
+                    ok
+                end
+            ok
+        ok
+
+        # yVal (scatter/bubble Y values)
+        aYVals = []
+        yvS = wrFindFrom(serXml, "<c:yVal>", 1)
+        if yvS = 0  yvS = wrFindFrom(serXml, "<c:yVal ", 1)  ok
+        if yvS > 0
+            yvE = wrFindCloseTag(serXml, "c:yVal", yvS)
+            if yvE > 0
+                yvXml = substr(serXml, yvS, yvE - yvS)
+                yvPos = 1
+                while true
+                    yvvS = wrFindFrom(yvXml, "<c:v>", yvPos)
+                    if yvvS = 0  break  ok
+                    yvvE = wrFindFrom(yvXml, "</c:v>", yvvS)
+                    if yvvE > 0
+                        add(aYVals, wrXmlUnescape(substr(yvXml, yvvS+5, yvvE-yvvS-5)))
+                        yvPos = yvvE + 1
+                    else
+                        yvPos = yvvS + 1
+                    ok
+                end
+            ok
+        ok
+
+        # bubbleSize (bubble chart size values)
+        aBubbleSizes = []
+        bszS = wrFindFrom(serXml, "<c:bubbleSize>", 1)
+        if bszS = 0  bszS = wrFindFrom(serXml, "<c:bubbleSize ", 1)  ok
+        if bszS > 0
+            bszE = wrFindCloseTag(serXml, "c:bubbleSize", bszS)
+            if bszE > 0
+                bszXml = substr(serXml, bszS, bszE - bszS)
+                bszPos = 1
+                while true
+                    bvS = wrFindFrom(bszXml, "<c:v>", bszPos)
+                    if bvS = 0  break  ok
+                    bvE = wrFindFrom(bszXml, "</c:v>", bvS)
+                    if bvE > 0
+                        add(aBubbleSizes, wrXmlUnescape(substr(bszXml, bvS+5, bvE-bvS-5)))
+                        bszPos = bvE + 1
+                    else
+                        bszPos = bvS + 1
+                    ok
+                end
+            ok
+        ok
+
+        # Marker symbol and size
+        serMarkerStyle = ""
+        serMarkerSize  = 0
+        mrkS = wrFindFrom(serXml, "<c:marker>", 1)
+        if mrkS = 0  mrkS = wrFindFrom(serXml, "<c:marker ", 1)  ok
+        if mrkS > 0
+            mrkE = wrFindCloseTag(serXml, "c:marker", mrkS)
+            if mrkE > 0
+                mrkXml = substr(serXml, mrkS, mrkE - mrkS)
+                symS = wrFindFrom(mrkXml, "<c:symbol ", 1)
+                if symS > 0  serMarkerStyle = wrAttr(substr(mrkXml, symS, 60), "val")  ok
+                szMrkS = wrFindFrom(mrkXml, "<c:size ", 1)
+                if szMrkS > 0  serMarkerSize = number(wrAttr(substr(mrkXml, szMrkS, 60), "val"))  ok
+            ok
+        ok
+
+        # bubble3D per series
+        serBubble3D = wrFindFrom(serXml, "<c:bubble3D ", 1) > 0 or
+                      wrFindFrom(serXml, "<c:bubble3D>", 1) > 0
+
+        ser = [:name=serName, :categories=aCats, :values=aVals,
+               :xValues=aXVals, :yValues=aYVals, :sizes=aBubbleSizes,
+               :markerStyle=serMarkerStyle, :markerSize=serMarkerSize,
+               :bubble3D=serBubble3D]
         add(aSeries, ser)
         serPos = serE
     end
@@ -1443,6 +1536,19 @@ func wrParseChartData relId, aRels, tempDir
     if grpS > 0
         grpEl = substr(chartXml, grpS, 80)
         result[:grouping] = wrAttr(grpEl, "val")
+    ok
+
+    # scatterStyle (marker, lineMarker, line, smooth, smoothMarker)
+    scStyleS = wrFindFrom(chartXml, "<c:scatterStyle ", 1)
+    if scStyleS > 0
+        scStyleEl = substr(chartXml, scStyleS, 80)
+        result[:scatterStyle] = wrAttr(scStyleEl, "val")
+    ok
+
+    # bubble3D at chart level
+    if wrFindFrom(chartXml, "<c:bubble3D ", 1) > 0 or
+       wrFindFrom(chartXml, "<c:bubble3D>", 1) > 0
+        result[:bubble3D] = true
     ok
 
     # barDir: col = column chart, bar = horizontal bar chart
