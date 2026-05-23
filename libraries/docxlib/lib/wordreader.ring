@@ -735,12 +735,12 @@ class WordReader
                             if itE3 > 0
                                 itTxt3 = substr(pXml, itS3, itE3 - itS3)
                                 isTocMain = (wrFindFrom(itTxt3, " TOC ", 1) > 0) and
-                                            (wrFindFrom(itTxt3, chr(92)+"o", 1) > 0 or
-                                             wrFindFrom(itTxt3, chr(92)+"h", 1) > 0 or
-                                             wrFindFrom(itTxt3, chr(92)+"u", 1) > 0 or
-                                             wrFindFrom(itTxt3, chr(92)+"z", 1) > 0)
+                                            (wrFindFrom(itTxt3, char(92)+"o", 1) > 0 or
+                                             wrFindFrom(itTxt3, char(92)+"h", 1) > 0 or
+                                             wrFindFrom(itTxt3, char(92)+"u", 1) > 0 or
+                                             wrFindFrom(itTxt3, char(92)+"z", 1) > 0)
                                 isTocCaption = (wrFindFrom(itTxt3, " TOC ", 1) > 0) and
-                                               (wrFindFrom(itTxt3, chr(92)+"c", 1) > 0)
+                                               (wrFindFrom(itTxt3, char(92)+"c", 1) > 0)
                                 isSeqField = wrFindFrom(itTxt3, " SEQ ", 1) > 0
                                 if isTocMain
                                     isTOCPara = true
