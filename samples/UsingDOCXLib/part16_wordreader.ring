@@ -280,13 +280,16 @@ ok
 
 # f) Append a new summary section
 ? "  f) Appending 2025 update summary section ..."
-wr.appendPageBreak()
-wr.appendHeading("5. 2025 Edition -- Change Summary", 1)
-wr.appendParagraph(
+# Get a writer from the reader - all reader mutations above are already in aBlocks.
+# The writer receives the full modified document and we add new content to it.
+w = wr.toWriter()
+w.addPageBreak()
+w.addHeading("5. 2025 Edition -- Change Summary", 1)
+w.addParagraph(
     "This section documents all changes made to the catalogue in the 2025 " +
     "revised edition compared to the original 2024 publication.", NULL)
 
-wr.appendTable([
+w.addTable([
     ["Change",                    "Section",       "Detail"],
     ["Year references updated",   "Throughout",    "All 2024 references changed to 2025"],
     ["Ring Platform pricing",     "Section 1.1",   "Prices increased by ~15%"],
@@ -294,10 +297,10 @@ wr.appendTable([
     ["RingStar notes",           "Section 3",     "Updated to reflect GA release"],
     ["Introduction rewritten",    "Cover",         "Updated to reflect 2025 pricing policy"],
     ["Title updated",             "Cover",         "Revised Edition designation added"]
-], [5.5, 3.0, 6.5])
+], [:colWidths=[5.5, 3.0, 6.5], :headerRow=true])
 
-wr.appendEmptyParagraph()
-wr.appendParagraph(
+w.addEmptyParagraph()
+w.addParagraph(
     "Document revision prepared by the Ring Documentation Team. " +
     "For queries contact: docs@ringtech.example.com", NULL)
 ? "     Section appended."
@@ -307,7 +310,7 @@ wr.appendParagraph(
 # STEP 5 -- Save the modified document
 # =============================================================================
 ? "STEP 5: Saving modified document (demo_wordreader_modified.docx) ..."
-wr.save("demo_wordreader_modified.docx")
+w.save("demo_wordreader_modified.docx")
 wr.cleanup()
 ? "  Saved and temp files cleaned up."
 ? ""
