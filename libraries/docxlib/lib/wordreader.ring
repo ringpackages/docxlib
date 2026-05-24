@@ -682,19 +682,8 @@ class WordReader
         # wrParseAnchoredImages still called by getFloatingImageWrapTypes() query
         # but is NOT pre-added to aBlocks here; parseParagraph handles them in order
 
-        # Parse text boxes
-        textBoxes = wrParseTextBoxes(bodyXml)
-        for tb in textBoxes
-            tbBlock = []
-            tbBlock[:type]   = "textbox"
-            tbBlock[:text]   = tb[:text]
-            tbBlock[:x]      = tb[:x]
-            tbBlock[:y]      = tb[:y]
-            tbBlock[:width]  = tb[:width]
-            tbBlock[:height] = tb[:height]
-            tbBlock[:bookmark] = ""
-            aBlocks + tbBlock
-        next
+        # Text boxes are now preserved as rawparagraph blocks
+        # at their original positions (wrParseTextBoxes pre-insertion removed)
 
         # Use wrSplitBodyElements for O(n) body parsing (avoids O(n^2) search)
         bodyElements = wrSplitBodyElements(bodyXml)
@@ -1902,6 +1891,20 @@ class WordReader
         # Quick DrawingML shape check to avoid falsely returning "empty"
         # before full shape detection runs below
         hasMcShape = (wrFindFrom(pXml, "<mc:AlternateContent", 1) > 0) and (wrFindFrom(pXml, "wps:wsp", 1) > 0)
+        # Detect VML textbox paragraphs (<w:pict> with <w:txbxContent> or <v:shapetype>)
+        # These must be preserved verbatim as floating elements
+        hasPictTxbx = (wrFindFrom(pXml, "<w:pict>", 1) > 0 or wrFindFrom(pXml, "<w:pict ", 1) > 0) and
+                      (wrFindFrom(pXml, "<w:txbxContent>", 1) > 0 or
+                       wrFindFrom(pXml, "<v:shapetype ", 1) > 0 or
+                       wrFindFrom(pXml, "<v:shape ", 1) > 0 or
+                       wrFindFrom(pXml, "<v:rect ", 1) > 0)
+        if hasPictTxbx
+            block[:type]   = "rawparagraph"
+            block[:rawXml] = pXml
+            block[:text]   = ""
+            block[:bookmark] = bookmarkName
+            return block
+        ok
         if len(fullText) = 0 and !isImage and !isChart and !isHorizLine and !isListItem and
            !hasNote and len(sectBreakType) = 0 and !hasMcShape
             block[:type] = "empty"
