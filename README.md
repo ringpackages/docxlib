@@ -59,7 +59,6 @@ DOCXLib is a **pure-Ring** library for generating Word (`.docx`) documents.
 * [Section and Layout Queries](#section-and-layout-queries)
 * [Round-Trip: toWriter()](#round-trip-towriter)
 * [Reader Quick Reference](#reader-quick-reference)
-* [Limitations](#limitations)
 
 ---
 
@@ -2108,10 +2107,4 @@ reader.save("output.docx")
 reader.cleanup()
 ```
 
-## Limitations
-
-At the current stage of development
-
-* WordWriter doesn't compress the content when creating docx file  
-* WordReader doesn't handle all of the Word file features
 
