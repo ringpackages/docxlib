@@ -1994,6 +1994,8 @@ class WordReader
             block[:runs]     = aRuns
             # Numbered heading: check if numId present in pPr
             headingIsNumbered = false
+            headingNumId      = 1
+            headingIlvl       = 0
             if len(pPrXml) > 0
                 hnumPrS = wrFindFrom(pPrXml, "<w:numPr>", 1)
                 if hnumPrS = 0  hnumPrS = wrFindFrom(pPrXml, "<w:numPr ", 1)  ok
@@ -2007,12 +2009,24 @@ class WordReader
                             hnidV  = wrAttr(hnidEl, "w:val")
                             if len(hnidV) > 0 and hnidV != "0"
                                 headingIsNumbered = true
+                                headingNumId = number(hnidV)
+                                # Extract ilvl
+                                hilvlS = wrFindFrom(hnumPrXml, "<w:ilvl ", 1)
+                                if hilvlS > 0
+                                    hilvlEl = substr(hnumPrXml, hilvlS, 60)
+                                    hilvlV  = wrAttr(hilvlEl, "w:val")
+                                    if len(hilvlV) > 0
+                                        headingIlvl = number(hilvlV)
+                                    ok
+                                ok
                             ok
                         ok
                     ok
                 ok
             ok
             block[:numbered] = headingIsNumbered
+            block[:numId]    = headingNumId
+            block[:ilvl]     = headingIlvl
             block[:bookmark] = bookmarkName
             return block
         ok
@@ -4307,9 +4321,17 @@ class WordReader
                         wPair = [run[:text], rOpts2]
                         wrRuns + Ref(wPair)
                     next
-                    writer.addHeading(block[:text], hLvl)
+                    if block[:numbered] = true
+                        writer.addNumberedHeading(block[:text], hLvl, block[:numId])
+                    else
+                        writer.addHeading(block[:text], hLvl)
+                    ok
                 else
-                    writer.addHeading(block[:text], hLvl)
+                    if block[:numbered] = true
+                        writer.addNumberedHeading(block[:text], hLvl, block[:numId])
+                    else
+                        writer.addHeading(block[:text], hLvl)
+                    ok
                 ok
 
             elseif bType = "paragraph" or bType = "rtlparagraph"
