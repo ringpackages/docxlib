@@ -50,6 +50,7 @@ class WordReader
     cSrcPageBorderColor
     nSrcPageBorderSize
     nSrcPageBorderSpace
+    aSrcPageBorderSides   # Which sides: list of "top","left","bottom","right"
     cSrcPageBgColor
     aComments
     cSrcOrientation
@@ -123,6 +124,7 @@ class WordReader
         cSrcPageBorderColor  = "000000"
         nSrcPageBorderSize   = 24
         nSrcPageBorderSpace  = 24
+        aSrcPageBorderSides  = []
         cSrcPageBgColor  = ""
         aComments        = []
         cSrcOrientation  = "portrait"
@@ -419,20 +421,29 @@ class WordReader
                         pgBdrE = wrFindCloseTag(lastSectXml, "w:pgBorders", pgBdrS)
                         if pgBdrE > 0
                             bdrXml = substr(lastSectXml, pgBdrS, pgBdrE - pgBdrS)
-                            bdrSideS = wrFindFrom(bdrXml, "<w:top ", 1)
-                            if bdrSideS = 0  bdrSideS = wrFindFrom(bdrXml, "<w:left ", 1)  ok
-                            if bdrSideS > 0
-                                bdrEl = substr(bdrXml, bdrSideS, 120)
-                                bSrcPageBorder      = true
-                                sv2 = wrAttr(bdrEl, "w:val")
-                                cv2 = wrAttr(bdrEl, "w:color")
-                                szv = wrAttr(bdrEl, "w:sz")
-                                spv = wrAttr(bdrEl, "w:space")
-                                if len(sv2) > 0  cSrcPageBorderStyle = sv2          ok
-                                if len(cv2) > 0  cSrcPageBorderColor = cv2          ok
-                                if len(szv) > 0  nSrcPageBorderSize  = number(szv)  ok
-                                if len(spv) > 0  nSrcPageBorderSpace = number(spv)  ok
-                            ok
+                            # Detect which sides are present and read attrs from first found side
+                            aSrcPageBorderSides = []
+                            bdrAttrRead = false
+                            for bdrSideName in ["top", "left", "bottom", "right"]
+                                bdrSideTag = "<w:" + bdrSideName + " "
+                                bdrSideS2 = wrFindFrom(bdrXml, bdrSideTag, 1)
+                                if bdrSideS2 > 0
+                                    aSrcPageBorderSides + bdrSideName
+                                    if !bdrAttrRead
+                                        bdrEl = substr(bdrXml, bdrSideS2, 120)
+                                        bSrcPageBorder = true
+                                        sv2 = wrAttr(bdrEl, "w:val")
+                                        cv2 = wrAttr(bdrEl, "w:color")
+                                        szv = wrAttr(bdrEl, "w:sz")
+                                        spv = wrAttr(bdrEl, "w:space")
+                                        if len(sv2) > 0  cSrcPageBorderStyle = sv2          ok
+                                        if len(cv2) > 0  cSrcPageBorderColor = cv2          ok
+                                        if len(szv) > 0  nSrcPageBorderSize  = number(szv)  ok
+                                        if len(spv) > 0  nSrcPageBorderSpace = number(spv)  ok
+                                        bdrAttrRead = true
+                                    ok
+                                ok
+                            next
                         ok
                     ok
                 ok
@@ -4433,10 +4444,15 @@ class WordReader
         # Page border
         if bSrcPageBorder
             # nSrcPageBorderSize is in eighths-of-point; setPageBorder expects points
-            writer.setPageBorder([:style=cSrcPageBorderStyle,
-                                   :color=cSrcPageBorderColor,
-                                   :size=nSrcPageBorderSize/8.0,
-                                   :space=nSrcPageBorderSpace])
+            pgBdrOpts = [:style=cSrcPageBorderStyle,
+                         :color=cSrcPageBorderColor,
+                         :size=nSrcPageBorderSize/8.0,
+                         :space=nSrcPageBorderSpace]
+            # Pass only the sides that were present in the source
+            if isList(aSrcPageBorderSides) and len(aSrcPageBorderSides) > 0
+                pgBdrOpts[:sides] = aSrcPageBorderSides
+            ok
+            writer.setPageBorder(pgBdrOpts)
         ok
 
         # Page background
