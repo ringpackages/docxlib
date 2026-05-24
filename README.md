@@ -4,7 +4,7 @@
 
 ## Overview
 
-DOCXLib is a **pure-Ring** library for generating Word (`.docx`) documents. 
+DOCXLib is a **pure-Ring** library for generating and reading Word (`.docx`) documents. 
 
 ### Features
 
