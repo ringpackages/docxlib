@@ -574,41 +574,24 @@ class WordWriter
         if !isList(options)
             options = []
         ok
-        # Extract option values into locals (Ring cannot use subscripts inside list literals)
-        stName        = options[:name]
-        stBasedOn     = options[:basedOn]
-        stBold        = options[:bold]
-        stItalic      = options[:italic]
-        stUnderline   = options[:underline]
-        stFont        = options[:font]
-        stSize        = options[:size]
-        stColor       = options[:color]
-        stBgColor     = options[:bgColor]
-        stAlign       = options[:align]
-        stSpaceBefore = options[:spaceBefore]
-        stSpaceAfter  = options[:spaceAfter]
-        stLineSpacing = options[:lineSpacing]
-        stIndent      = options[:indent]
-        stKeepNext    = options[:keepNext]
-        stKeepLines   = options[:keepLines]
         style = [
             :id          = styleId,
-            :name        = stName,
-            :basedOn     = stBasedOn,
-            :bold        = stBold,
-            :italic      = stItalic,
-            :underline   = stUnderline,
-            :font        = stFont,
-            :size        = stSize,
-            :color       = stColor,
-            :bgColor     = stBgColor,
-            :align       = stAlign,
-            :spaceBefore = stSpaceBefore,
-            :spaceAfter  = stSpaceAfter,
-            :lineSpacing = stLineSpacing,
-            :indent      = stIndent,
-            :keepNext    = stKeepNext,
-            :keepLines   = stKeepLines
+            :name        = options[:name],
+            :basedOn     = options[:basedOn],
+            :bold        = options[:bold],
+            :italic      = options[:italic],
+            :underline   = options[:underline],
+            :font        = options[:font],
+            :size        = options[:size],
+            :color       = options[:color],
+            :bgColor     = options[:bgColor],
+            :align       = options[:align],
+            :spaceBefore = options[:spaceBefore],
+            :spaceAfter  = options[:spaceAfter],
+            :lineSpacing = options[:lineSpacing],
+            :indent      = options[:indent],
+            :keepNext    = options[:keepNext],
+            :keepLines   = options[:keepLines]
         ]
         aCustomStyles + style
         return self
@@ -1473,40 +1456,24 @@ class WordWriter
             options = []
         ok
         nTextBoxId = nTextBoxId + 1
-        # Extract option values into locals (Ring cannot use subscripts inside list literals)
-        tbX           = options[:x]
-        tbY           = options[:y]
-        tbWidth       = options[:width]
-        tbHeight      = options[:height]
-        tbAlign       = options[:align]
-        tbBold        = options[:bold]
-        tbItalic      = options[:italic]
-        tbFont        = options[:font]
-        tbSize        = options[:size]
-        tbColor       = options[:color]
-        tbBgColor     = options[:bgColor]
-        tbBorderColor = options[:borderColor]
-        tbBorderSize  = options[:borderSize]
-        tbNoFill      = options[:noFill]
-        tbNoBorder    = options[:noBorder]
         tb = [
             :type        = "textbox",
             :text        = text,
-            :x           = tbX,
-            :y           = tbY,
-            :width       = tbWidth,
-            :height      = tbHeight,
-            :align       = tbAlign,
-            :bold        = tbBold,
-            :italic      = tbItalic,
-            :font        = tbFont,
-            :size        = tbSize,
-            :color       = tbColor,
-            :bgColor     = tbBgColor,
-            :borderColor = tbBorderColor,
-            :borderSize  = tbBorderSize,
-            :noFill      = tbNoFill,
-            :noBorder    = tbNoBorder,
+            :x           = options[:x],
+            :y           = options[:y],
+            :width       = options[:width],
+            :height      = options[:height],
+            :align       = options[:align],
+            :bold        = options[:bold],
+            :italic      = options[:italic],
+            :font        = options[:font],
+            :size        = options[:size],
+            :color       = options[:color],
+            :bgColor     = options[:bgColor],
+            :borderColor = options[:borderColor],
+            :borderSize  = options[:borderSize],
+            :noFill      = options[:noFill],
+            :noBorder    = options[:noBorder],
             :tbId        = nTextBoxId
         ]
         aContent + tb
