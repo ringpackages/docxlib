@@ -4658,16 +4658,53 @@ class WordWriter
                     xml_ += '<w:rPr>' + rPr + '</w:rPr>'
                 ok
                 
-                # Text content
+                # Text content - split on tab characters so <w:tab/> is emitted
                 if runText != NULL and len(runText) > 0
-                    if left(runText, 1) = " " or right(runText, 1) = " "
-                        xml_ += '<w:t xml:space="preserve">' + wordXmlEsc(runText) + '</w:t>'
+                    tabPos4 = wrFindFrom(runText, char(9), 1)
+                    if tabPos4 = 0
+                        # No tabs - emit normally
+                        if left(runText, 1) = " " or right(runText, 1) = " "
+                            xml_ += '<w:t xml:space="preserve">' + wordXmlEsc(runText) + '</w:t>'
+                        else
+                            xml_ += '<w:t>' + wordXmlEsc(runText) + '</w:t>'
+                        ok
                     else
-                        xml_ += '<w:t>' + wordXmlEsc(runText) + '</w:t>'
+                        # Has tabs - split and emit <w:tab/> between segments
+                        xml_ += '</w:r>'
+                        tabScan4 = 1
+                        while true
+                            nextTab4 = wrFindFrom(runText, char(9), tabScan4)
+                            seg4 = ""
+                            if nextTab4 > 0
+                                seg4 = substr(runText, tabScan4, nextTab4 - tabScan4)
+                            else
+                                seg4 = substr(runText, tabScan4)
+                            ok
+                            if len(seg4) > 0
+                                xml_ += '<w:r>'
+                                if len(rPrXml) > 0  xml_ += rPrXml  ok
+                                if left(seg4,1) = " " or right(seg4,1) = " "
+                                    xml_ += '<w:t xml:space="preserve">' + wordXmlEsc(seg4) + '</w:t>'
+                                else
+                                    xml_ += '<w:t>' + wordXmlEsc(seg4) + '</w:t>'
+                                ok
+                                xml_ += '</w:r>'
+                            ok
+                            if nextTab4 = 0  break  ok
+                            xml_ += '<w:r>'
+                            if len(rPrXml) > 0  xml_ += rPrXml  ok
+                            xml_ += '<w:tab/></w:r>'
+                            tabScan4 = nextTab4 + 1
+                        end
+                        # Skip the closing </w:r> since already emitted
+                        xml_ += '<!--tab-handled-->'
                     ok
                 ok
-                
-                xml_ += '</w:r>'
+                if right(xml_, 18) = '<!--tab-handled-->'
+                    xml_ = substr(xml_, 1, len(xml_) - 18)
+                else
+                    xml_ += '</w:r>'
+                ok
             next
             
             xml_ += '</w:p>'

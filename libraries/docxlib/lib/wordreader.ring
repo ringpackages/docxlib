@@ -850,7 +850,27 @@ class WordReader
                         aBlocks + mfBlock
                     ok
                 ok
-                if !isMergePara and !isFieldPara2 and !isTOCPara
+                # Intercept REF/PAGEREF cross-reference field paragraphs
+                isRefPara = false
+                if !isMergePara and !isTOCPara
+                    if wrFindFrom(pXml, "instrText", 1) > 0
+                        itRefS = wrFindFrom(pXml, "<w:instrText", 1)
+                        if itRefS > 0
+                            itRefE = wrFindFrom(pXml, "</w:instrText>", itRefS)
+                            if itRefE > 0
+                                itRefTxt = substr(pXml, itRefS, itRefE - itRefS)
+                                if wrFindFrom(itRefTxt, " REF ", 1) > 0 or
+                                   wrFindFrom(itRefTxt, " PAGEREF ", 1) > 0
+                                    isRefPara = true
+                                    refBlock2 = [:type="rawparagraph",
+                                                  :rawXml=pXml, :text="", :bookmark=""]
+                                    aBlocks + refBlock2
+                                ok
+                            ok
+                        ok
+                    ok
+                ok
+                if !isMergePara and !isFieldPara2 and !isTOCPara and !isRefPara
                     pBlock = parseParagraph(pXml)
                     aBlocks + pBlock
                 ok
@@ -1125,6 +1145,15 @@ class WordReader
             bmName = wrAttr(bmEl, "w:name")
             if bmName != "_GoBack" and len(bmName) > 0
                 bookmarkName = bmName
+                # If the paragraph also has text content (inline bookmark),
+                # preserve it verbatim so bookmark and text stay in one paragraph.
+                if wrFindFrom(pXml, "<w:t>", 1) > 0 or wrFindFrom(pXml, "<w:t ", 1) > 0
+                    block[:type]    = "rawparagraph"
+                    block[:rawXml]  = pXml
+                    block[:text]    = ""
+                    block[:bookmark] = bookmarkName
+                    return block
+                ok
             ok
         ok
 
@@ -1616,9 +1645,18 @@ class WordReader
                 ok
             ok
 
-            # Tab character
-            if wrFindFrom(rXml, "<w:tab/>", 1) > 0 or wrFindFrom(rXml, "<w:tab />", 1) > 0
-                tText += char(9)
+            # Tab character - preserve position relative to text
+            tabPos2 = wrFindFrom(rXml, "<w:tab/>", 1)
+            if tabPos2 = 0  tabPos2 = wrFindFrom(rXml, "<w:tab />", 1)  ok
+            if tabPos2 > 0
+                tS1tmp = wrFindFrom(rXml, "<w:t>", 1)
+                tS2tmp = wrFindFrom(rXml, "<w:t ", 1)
+                tStmp  = wrMinPos(tS1tmp, tS2tmp)
+                if tStmp > 0 and tabPos2 < tStmp
+                    tText = char(9) + tText   # tab before text
+                else
+                    tText = tText + char(9)   # tab after text
+                ok
             ok
 
             # Run properties
@@ -1762,11 +1800,17 @@ class WordReader
             tabSep = char(9)
             tabPos = 1
             tabLen = len(fullText)
-            while tabPos <= tabLen
+            while tabPos <= tabLen + 1  # +1 to catch trailing tab
                 tabP2 = wrFindFrom(fullText, tabSep, tabPos)
                 if tabP2 = 0
+                    # No more tabs - add remaining text (may be empty)
+                    seg5 = ""
                     if tabPos <= tabLen
-                        aTabSegments + substr(fullText, tabPos, tabLen - tabPos + 1)
+                        seg5 = substr(fullText, tabPos, tabLen - tabPos + 1)
+                    ok
+                    # Only add empty segment if it follows a tab (trailing tab case)
+                    if len(seg5) > 0 or len(aTabSegments) > 0
+                        aTabSegments + seg5
                     ok
                     exit
                 ok
