@@ -21,6 +21,7 @@ DOCXLib is a **pure-Ring** library for generating Word (`.docx`) documents.
 * **Mail Merge** — Template engine: `setMergeTemplate()`, `mergeRecord()`, `mergeAll()` with `{{FIELD}}` tokens
 * **Image cropping** — Non-destructive `a:srcRect` crop by percentage on inline and floating images
 * **Rich notes** — Footnote and endnote bodies with full per-run formatting (bold, italic, colour, size)
+* **WordReader** — Parse `.docx` files — extract content and styles; full round-trip reconstruct and save 
 
 ## Table of Contents
 
