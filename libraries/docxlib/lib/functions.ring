@@ -98,26 +98,9 @@ func wordGetImageExtension filepath
 func wordColorToHex color
     # Convert color name or hex to proper format
     color = upper(color)
-    
-    # Common color names
-    colors = [
-        :black = "000000",
-        :white = "FFFFFF",
-        :red = "FF0000",
-        :green = "00FF00",
-        :blue = "0000FF",
-        :yellow = "FFFF00",
-        :orange = "FFA500",
-        :purple = "800080",
-        :gray = "808080",
-        :grey = "808080",
-        :navy = "000080",
-        :teal = "008080",
-        :maroon = "800000"
-    ]
-    
-    if colors[lower(color)] != NULL
-        return colors[lower(color)]
+       
+    if aCommonColors[lower(color)] != NULL
+        return aCommonColors[lower(color)]
     ok
     
     # Remove # if present
