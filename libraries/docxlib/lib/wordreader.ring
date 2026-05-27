@@ -3186,36 +3186,36 @@ class WordReader
     # Query methods
     # =========================================================================
 
-    func getBlocks             return aBlocks          ok
-    func getFilePath           return cFilePath         ok
-    func getTitle              return cTitle            ok
-    func getAuthor             return cAuthor           ok
-    func getDefaultFont        return cDefaultFont      ok
-    func getDefaultFontSize    return nDefaultSize      ok
-    func getPageWidthCm        return nPageWidth / 567.0   ok
-    func getPageHeightCm       return nPageHeight / 567.0  ok
-    func getMarginTopCm        return nMarginTop / 567.0   ok
-    func getMarginBottomCm     return nMarginBottom / 567.0  ok
-    func getMarginLeftCm       return nMarginLeft / 567.0   ok
-    func getMarginRightCm      return nMarginRight / 567.0  ok
-    func getOrientation        return cSrcOrientation   ok
-    func getHeaderText         return cHeaderText       ok
-    func getFooterText         return cFooterText       ok
-    func getEvenPageHeaderText return cEvenPageHeaderText   ok
-    func getEvenPageFooterText return cEvenPageFooterText   ok
-    func getFirstPageHeaderText return cFirstPageHeaderText ok
-    func getFirstPageFooterText return cFirstPageFooterText ok
-    func hasEvenAndOddHeaders  return bSrcEvenAndOddHeaders  ok
-    func hasFirstPageDifferent return bSrcFirstPageDifferent ok
-    func hasPageBorder         return bSrcPageBorder    ok
-    func getPageBorderStyle    return cSrcPageBorderStyle ok
-    func getPageBorderColor    return cSrcPageBorderColor ok
-    func getPageBorderSizePt   return nSrcPageBorderSize / 8.0  ok
-    func getPageBgColor        return cSrcPageBgColor   ok
-    func hasPageBackground     return len(cSrcPageBgColor) > 0  ok
-    func getColumnCount        return nSrcColumns       ok
-    func getColumnSpaceCm      return nSrcColumnSpace / 567.0  ok
-    func getComments           return aComments         ok
+    func getBlocks             return aBlocks          
+    func getFilePath           return cFilePath         
+    func getTitle              return cTitle            
+    func getAuthor             return cAuthor           
+    func getDefaultFont        return cDefaultFont      
+    func getDefaultFontSize    return nDefaultSize      
+    func getPageWidthCm        return nPageWidth / 567.0   
+    func getPageHeightCm       return nPageHeight / 567.0  
+    func getMarginTopCm        return nMarginTop / 567.0   
+    func getMarginBottomCm     return nMarginBottom / 567.0  
+    func getMarginLeftCm       return nMarginLeft / 567.0   
+    func getMarginRightCm      return nMarginRight / 567.0  
+    func getOrientation        return cSrcOrientation   
+    func getHeaderText         return cHeaderText       
+    func getFooterText         return cFooterText       
+    func getEvenPageHeaderText return cEvenPageHeaderText   
+    func getEvenPageFooterText return cEvenPageFooterText   
+    func getFirstPageHeaderText return cFirstPageHeaderText 
+    func getFirstPageFooterText return cFirstPageFooterText 
+    func hasEvenAndOddHeaders  return bSrcEvenAndOddHeaders  
+    func hasFirstPageDifferent return bSrcFirstPageDifferent 
+    func hasPageBorder         return bSrcPageBorder    
+    func getPageBorderStyle    return cSrcPageBorderStyle 
+    func getPageBorderColor    return cSrcPageBorderColor 
+    func getPageBorderSizePt   return nSrcPageBorderSize / 8.0  
+    func getPageBgColor        return cSrcPageBgColor   
+    func hasPageBackground     return len(cSrcPageBgColor) > 0  
+    func getColumnCount        return nSrcColumns       
+    func getColumnSpaceCm      return nSrcColumnSpace / 567.0  
+    func getComments           return aComments         
     func getFootnotes
         result = []
         for block in aBlocks
